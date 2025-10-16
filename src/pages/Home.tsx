@@ -1,15 +1,3 @@
-/**
- * Home.tsx
- *
- * Layout decisions:
- * - Estrutura mobile-first com container centralizado (max-w-7xl) e seções verticais,
- *   mantendo o Header sticky conforme solicitado.
- * - O componente SearchCompact possui variantes para Home (block) e para o Header (inline).
- * - A página foi pensada para ser facilmente estendida à tela de Resultados: basta reutilizar
- *   SearchCompact + PropertyCard + FiltersBar e mover a seção de grid para uma rota dedicada,
- *   adicionando paginação e o mapa descritos na documentação.
- */
-
 import { useState } from 'react';
 
 import { Footer } from '../components/Footer';
@@ -117,48 +105,20 @@ const faqs = [
   {
     question: 'Como funciona a reserva?',
     answer:
-      'Escolha as datas, informe os hóspedes e finalize o pagamento com segurança. Enviamos a confirmação detalhada em poucos minutos.',
+      'Você escolhe datas e hóspedes, verifica o total e confirma o pagamento. Enviamos a confirmação em poucos minutos.',
   },
   {
-    question: 'Quais taxas existem?',
-    answer:
-      'Mostramos o preço total estimado antes de pagar, incluindo taxas de limpeza e serviço. Sem taxas ocultas.',
+    question: 'Existem taxas ocultas?',
+    answer: 'Não. Exibimos o total estimado antes de você reservar.',
   },
   {
-    question: 'O que acontece se eu precisar cancelar?',
-    answer:
-      'Cada imóvel possui política específica. Destacamos as regras de cancelamento antes da reserva para você decidir com confiança.',
+    question: 'Posso cancelar?',
+    answer: 'Sim. Confira a política da acomodação antes de concluir a reserva.',
   },
 ];
 
-const AccordionItem = ({
-  question,
-  answer,
-  isOpen,
-  onToggle,
-}: {
-  question: string;
-  answer: string;
-  isOpen: boolean;
-  onToggle: () => void;
-}) => (
-  <div className="border-b border-slate-200 py-3">
-    <button
-      type="button"
-      onClick={onToggle}
-      className="flex w-full items-center justify-between text-left text-base font-medium text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
-      aria-expanded={isOpen}
-    >
-      {question}
-      <span className="ml-4 text-teal-600">{isOpen ? '−' : '+'}</span>
-    </button>
-    {isOpen && <p className="mt-2 text-sm text-slate-600">{answer}</p>}
-  </div>
-);
-
 export const Home = () => {
   const [searchSummary, setSearchSummary] = useState<SearchCompactPayload>();
-  const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   const handleSearch = (payload: SearchCompactPayload) => {
     setSearchSummary(payload);
@@ -166,63 +126,30 @@ export const Home = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 text-slate-900">
       <Header onSearch={handleSearch} />
 
-      <main className="space-y-12 pb-12 pt-8 md:space-y-16 md:pb-20 md:pt-12">
-        <section className="mx-auto w-full max-w-6xl px-4 md:px-6">
-          <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white/80 shadow-xl shadow-slate-900/5 backdrop-blur">
-            <div className="grid gap-8 px-6 py-8 sm:px-10 sm:py-10 lg:grid-cols-[minmax(0,1.1fr),minmax(0,0.9fr)] lg:items-start xl:px-14 xl:py-12">
-              <div className="flex flex-col gap-6 text-left">
-                <div>
-                  <span className="inline-flex items-center rounded-full bg-teal-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-teal-700">
-                    Curadoria especializada
-                  </span>
-                  <h1 className="mt-4 text-3xl font-semibold leading-tight text-slate-900 sm:text-4xl md:text-5xl">
-                    Encontre a estadia perfeita
-                  </h1>
-                  <p className="mt-3 max-w-xl text-base leading-relaxed text-slate-600 md:text-lg">
-                    Casas e apartamentos selecionados a dedo para sua próxima viagem. Sem taxas ocultas e com suporte humano em português.
-                  </p>
-                </div>
-                <dl className="grid gap-4 text-sm text-slate-600 sm:grid-cols-2 sm:text-base">
-                  <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-                    <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Imóveis verificados</dt>
-                    <dd className="mt-1 text-lg font-semibold text-slate-900">+2.500</dd>
-                  </div>
-                  <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-                    <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Avaliação média</dt>
-                    <dd className="mt-1 text-lg font-semibold text-slate-900">4,8 estrelas</dd>
-                  </div>
-                </dl>
-              </div>
-              <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-lg shadow-slate-900/10 sm:p-6">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-base font-semibold text-slate-900">Planeje sua próxima estadia</h2>
-                  <span className="text-xs font-medium uppercase tracking-wide text-teal-600">Busca rápida</span>
-                </div>
-                <SearchCompact variant="block" onSubmit={handleSearch} value={searchSummary} />
-                <p className="text-xs text-slate-500">
-                  Dica: experimente datas flexíveis para descobrir estadias com melhores tarifas.
-                </p>
-              </div>
-            </div>
+      <main className="space-y-10 pb-12 pt-6 md:space-y-16 md:pb-16 md:pt-10">
+        <section className="mx-auto max-w-7xl px-4 text-center md:px-6">
+          <h1 className="text-2xl font-semibold text-slate-900 md:text-3xl">Encontre a estadia perfeita</h1>
+          <p className="mt-2 text-sm text-slate-600 md:text-base">
+            Curadoria de casas e apartamentos. Sem taxa oculta e suporte em português.
+          </p>
+        </section>
+
+        <section className="mx-auto max-w-5xl px-4 md:px-6">
+          <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm md:p-4">
+            <SearchCompact variant="block" onSubmit={handleSearch} value={searchSummary} />
           </div>
         </section>
 
-        <section aria-labelledby="collections-heading" className="mx-auto w-full max-w-6xl px-4 md:px-6">
-          <div className="flex flex-col gap-3 text-left">
-            <h2 id="collections-heading" className="text-xl font-semibold text-slate-900 md:text-2xl">
-              Descubra por destino ou estilo
-            </h2>
-            <span className="text-sm text-slate-500 md:text-base">Escolha um tema para iniciar uma busca personalizada.</span>
-          </div>
-          <div className="mt-5 -mx-4 flex snap-x snap-mandatory items-stretch gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:justify-start md:gap-4 md:overflow-visible md:px-0">
+        <section className="mx-auto max-w-7xl px-4 md:px-6">
+          <div className="flex flex-wrap justify-center gap-3">
             {collections.map((collection) => (
               <button
                 key={collection}
                 type="button"
-                className="inline-flex h-10 min-w-[9.5rem] shrink-0 snap-start items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 md:min-w-0"
+                className="inline-flex h-9 items-center rounded-full bg-slate-100 px-4 text-sm font-medium text-slate-700 transition hover:bg-slate-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
                 data-evt="cta_click"
                 data-ctx="collection_chip"
               >
@@ -232,44 +159,33 @@ export const Home = () => {
           </div>
         </section>
 
-        <section aria-labelledby="properties-heading" className="mx-auto w-full max-w-6xl px-4 md:px-6">
-          <div className="grid gap-8 lg:grid-cols-[minmax(0,1.6fr),minmax(0,0.85fr)] lg:items-start">
-            <div className="flex flex-col gap-6">
-              <div className="flex flex-col gap-2 text-left">
-                <h2 id="properties-heading" className="text-xl font-semibold text-slate-900 md:text-2xl">
-                  Sugestões para você
-                </h2>
-                <span className="text-sm text-slate-500 md:text-base">
-                  Baseado nas pesquisas mais populares desta semana
-                </span>
-              </div>
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-                {properties.map((property) => (
-                  <PropertyCard key={property.title} {...property} />
-                ))}
-              </div>
-            </div>
-            <aside className="flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white p-5 shadow-lg shadow-slate-900/10 lg:sticky lg:top-28">
-              <div>
-                <h2 id="faq-heading" className="text-lg font-semibold text-slate-900">
-                  FAQ curto (3 itens)
-                </h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  Respondemos às dúvidas mais comuns sobre a experiência RS Rent Scout.
-                </p>
-              </div>
-              <div>
-                {faqs.map((faq, index) => (
-                  <AccordionItem
-                    key={faq.question}
-                    question={faq.question}
-                    answer={faq.answer}
-                    isOpen={openFaq === index}
-                    onToggle={() => setOpenFaq((current) => (current === index ? null : index))}
-                  />
-                ))}
-              </div>
-            </aside>
+        <section className="mx-auto max-w-7xl px-4 md:px-6">
+          <div className="flex flex-col gap-2 text-left">
+            <h2 className="text-xl font-semibold text-slate-900 md:text-2xl">Sugestões para você</h2>
+            <p className="text-sm text-slate-600 md:text-base">Baseado nas pesquisas mais populares desta semana.</p>
+          </div>
+          <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {properties.map((property) => (
+              <PropertyCard key={property.title} {...property} />
+            ))}
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-7xl px-4 pb-12 md:px-6 md:pb-16">
+          <h2 className="sr-only">FAQ</h2>
+          <div className="rounded-xl border border-slate-200 bg-white">
+            {faqs.map((faq, index) => (
+              <details
+                key={faq.question}
+                className="border-b border-slate-200 px-4 py-3 last:border-b-0 md:px-6 md:py-4"
+                defaultOpen={index === 0}
+              >
+                <summary className="cursor-pointer text-sm font-medium text-slate-900 outline-none transition hover:text-slate-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 md:text-base">
+                  {faq.question}
+                </summary>
+                <p className="mt-2 text-sm text-slate-600 md:text-base">{faq.answer}</p>
+              </details>
+            ))}
           </div>
         </section>
       </main>

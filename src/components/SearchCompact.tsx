@@ -41,6 +41,11 @@ export const SearchCompact = ({ variant = 'block', value, onSubmit }: SearchComp
       ? 'grid grid-cols-1 gap-3 sm:grid-cols-[1.2fr,1fr,1fr,auto] sm:gap-2'
       : 'grid grid-cols-1 gap-3 md:grid-cols-[1.2fr,1fr,1fr,0.6fr] md:gap-2';
 
+  const labelClassName =
+    variant === 'inline'
+      ? 'text-xs font-medium text-slate-500'
+      : 'sr-only';
+
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     onSubmit({
@@ -60,7 +65,7 @@ export const SearchCompact = ({ variant = 'block', value, onSubmit }: SearchComp
     <form className={containerClasses} onSubmit={handleSubmit} noValidate>
       <div className={gridClasses}>
         <div className="flex flex-col gap-1">
-          <label htmlFor={`destination-${variant}`} className="text-xs font-medium text-slate-500">
+          <label htmlFor={`destination-${variant}`} className={labelClassName}>
             Destino
           </label>
           <input
@@ -75,7 +80,7 @@ export const SearchCompact = ({ variant = 'block', value, onSubmit }: SearchComp
         </div>
 
         <div className="flex flex-col gap-1">
-          <label htmlFor={`checkin-${variant}`} className="text-xs font-medium text-slate-500">
+          <label htmlFor={`checkin-${variant}`} className={labelClassName}>
             Check-in
           </label>
           <input
@@ -90,7 +95,7 @@ export const SearchCompact = ({ variant = 'block', value, onSubmit }: SearchComp
         </div>
 
         <div className="flex flex-col gap-1">
-          <label htmlFor={`checkout-${variant}`} className="text-xs font-medium text-slate-500">
+          <label htmlFor={`checkout-${variant}`} className={labelClassName}>
             Check-out
           </label>
           <input
@@ -105,7 +110,7 @@ export const SearchCompact = ({ variant = 'block', value, onSubmit }: SearchComp
         </div>
 
         <div className="flex flex-col gap-1">
-          <label htmlFor={`guests-${variant}`} className="text-xs font-medium text-slate-500">
+          <label htmlFor={`guests-${variant}`} className={labelClassName}>
             Hóspedes
           </label>
           <div className="flex h-11 items-center justify-between rounded-lg border border-slate-300 bg-white px-3">
