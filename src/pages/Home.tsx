@@ -127,14 +127,16 @@ export const Home = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
-      <Header onSearch={handleSearch} />
+      <Header />
 
-      <main className="space-y-10 pb-12 pt-6 md:space-y-16 md:pb-16 md:pt-10">
+      <main className="pb-12 pt-6 md:pb-16 md:pt-10">
         <section className="mx-auto max-w-7xl px-4 text-center md:px-6">
-          <h1 className="text-2xl font-semibold text-slate-900 md:text-3xl">Encontre a estadia perfeita</h1>
-          <p className="mt-2 text-sm text-slate-600 md:text-base">
-            Curadoria de casas e apartamentos. Sem taxa oculta e suporte em português.
-          </p>
+          <div className="py-6 md:py-10">
+            <h1 className="text-2xl font-semibold text-slate-900 md:text-3xl">Encontre a estadia perfeita</h1>
+            <p className="mt-2 text-sm text-slate-600 md:text-base">
+              Curadoria de casas e apartamentos. Sem taxa oculta e suporte em português.
+            </p>
+          </div>
         </section>
 
         <section className="mx-auto max-w-5xl px-4 md:px-6">
@@ -144,12 +146,12 @@ export const Home = () => {
         </section>
 
         <section className="mx-auto max-w-7xl px-4 md:px-6">
-          <div className="flex flex-wrap justify-center gap-3">
+          <div className="mt-4 flex flex-wrap justify-center gap-3">
             {collections.map((collection) => (
               <button
                 key={collection}
                 type="button"
-                className="inline-flex h-9 items-center rounded-full bg-slate-100 px-4 text-sm font-medium text-slate-700 transition hover:bg-slate-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
+                className="inline-flex h-9 items-center rounded-full bg-slate-100 px-4 text-sm font-medium text-slate-700 transition hover:bg-slate-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
                 data-evt="cta_click"
                 data-ctx="collection_chip"
               >
@@ -159,7 +161,7 @@ export const Home = () => {
           </div>
         </section>
 
-        <section className="mx-auto max-w-7xl px-4 md:px-6">
+        <section className="mx-auto max-w-7xl px-4 py-8 md:px-6">
           <div className="flex flex-col gap-2 text-left">
             <h2 className="text-xl font-semibold text-slate-900 md:text-2xl">Sugestões para você</h2>
             <p className="text-sm text-slate-600 md:text-base">Baseado nas pesquisas mais populares desta semana.</p>
@@ -171,22 +173,19 @@ export const Home = () => {
           </div>
         </section>
 
-        <section className="mx-auto max-w-7xl px-4 pb-12 md:px-6 md:pb-16">
+        <section className="mx-auto max-w-7xl px-4 py-10 md:px-6">
           <h2 className="sr-only">FAQ</h2>
-          <div className="rounded-xl border border-slate-200 bg-white">
-            {faqs.map((faq, index) => (
-              <details
-                key={faq.question}
-                className="border-b border-slate-200 px-4 py-3 last:border-b-0 md:px-6 md:py-4"
-                defaultOpen={index === 0}
-              >
-                <summary className="cursor-pointer text-sm font-medium text-slate-900 outline-none transition hover:text-slate-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 md:text-base">
-                  {faq.question}
-                </summary>
-                <p className="mt-2 text-sm text-slate-600 md:text-base">{faq.answer}</p>
-              </details>
-            ))}
-          </div>
+          {faqs.map((faq) => (
+            <details
+              key={faq.question}
+              className="border-b border-slate-200 py-3 first:border-t last:border-b-0"
+            >
+              <summary className="cursor-pointer text-base font-medium text-slate-900 transition hover:text-slate-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600">
+                {faq.question}
+              </summary>
+              <p className="mt-2 text-sm text-slate-600 md:text-base">{faq.answer}</p>
+            </details>
+          ))}
         </section>
       </main>
 

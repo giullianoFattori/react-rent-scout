@@ -14,7 +14,10 @@ export interface SearchCompactProps {
 }
 
 const baseInput =
-  'h-11 w-full rounded-lg border border-slate-300 bg-white px-4 text-sm text-slate-900 placeholder:text-slate-500 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600';
+  'h-11 w-full rounded-lg border border-slate-300 bg-white px-4 text-sm text-slate-900 placeholder:text-slate-500 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600';
+
+const rangeInput =
+  'h-full w-full bg-transparent text-sm text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-0';
 
 export const SearchCompact = ({ variant = 'block', value, onSubmit }: SearchCompactProps) => {
   const [destination, setDestination] = useState(value?.destination ?? '');
@@ -38,13 +41,15 @@ export const SearchCompact = ({ variant = 'block', value, onSubmit }: SearchComp
 
   const gridClasses =
     variant === 'inline'
-      ? 'grid grid-cols-1 gap-3 sm:grid-cols-[1.2fr,1fr,1fr,auto] sm:gap-2'
-      : 'grid grid-cols-1 gap-3 md:grid-cols-[1.2fr,1fr,1fr,0.6fr] md:gap-2';
+      ? 'grid grid-cols-1 gap-3 sm:grid-cols-[1.2fr,1.4fr,1fr,auto] sm:gap-2'
+      : 'grid grid-cols-1 gap-3 md:grid-cols-[1.2fr,1.4fr,1fr,0.6fr] md:gap-2';
 
   const labelClassName =
     variant === 'inline'
       ? 'text-xs font-medium text-slate-500'
       : 'sr-only';
+
+  const datesLegendId = `dates-label-${variant}`;
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -73,41 +78,48 @@ export const SearchCompact = ({ variant = 'block', value, onSubmit }: SearchComp
             name="destination"
             type="text"
             className={baseInput}
-            placeholder="Para onde você quer ir?"
+            placeholder="Destino"
             value={destination}
             onChange={(event) => setDestination(event.target.value)}
           />
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label htmlFor={`checkin-${variant}`} className={labelClassName}>
-            Check-in
-          </label>
-          <input
-            id={`checkin-${variant}`}
-            name="checkIn"
-            type="date"
-            className={baseInput}
-            placeholder="dd/mm/aaaa"
-            value={checkIn}
-            onChange={(event) => setCheckIn(event.target.value)}
-          />
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <label htmlFor={`checkout-${variant}`} className={labelClassName}>
-            Check-out
-          </label>
-          <input
-            id={`checkout-${variant}`}
-            name="checkOut"
-            type="date"
-            className={baseInput}
-            placeholder="dd/mm/aaaa"
-            value={checkOut}
-            onChange={(event) => setCheckOut(event.target.value)}
-          />
-        </div>
+        <fieldset className="flex flex-col gap-1 border-0 p-0">
+          <legend id={datesLegendId} className={labelClassName}>
+            Datas
+          </legend>
+          <div className="flex h-11 items-center gap-3 rounded-lg border border-slate-300 bg-white px-3 focus-within:border-primary-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-primary-600">
+            <label htmlFor={`checkin-${variant}`} className="sr-only">
+              Check-in
+            </label>
+            <input
+              id={`checkin-${variant}`}
+              name="checkIn"
+              type="date"
+              className={rangeInput}
+              placeholder="Check-in"
+              aria-labelledby={datesLegendId}
+              value={checkIn}
+              onChange={(event) => setCheckIn(event.target.value)}
+            />
+            <span aria-hidden="true" className="text-slate-300">
+              —
+            </span>
+            <label htmlFor={`checkout-${variant}`} className="sr-only">
+              Check-out
+            </label>
+            <input
+              id={`checkout-${variant}`}
+              name="checkOut"
+              type="date"
+              className={rangeInput}
+              placeholder="Check-out"
+              aria-labelledby={datesLegendId}
+              value={checkOut}
+              onChange={(event) => setCheckOut(event.target.value)}
+            />
+          </div>
+        </fieldset>
 
         <div className="flex flex-col gap-1">
           <label htmlFor={`guests-${variant}`} className={labelClassName}>
@@ -118,7 +130,7 @@ export const SearchCompact = ({ variant = 'block', value, onSubmit }: SearchComp
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-300 text-slate-600 transition hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-300 text-slate-600 transition hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 disabled:cursor-not-allowed disabled:opacity-60"
                 aria-label="Diminuir quantidade de hóspedes"
                 onClick={() => setGuests((prev) => Math.max(1, prev - 1))}
                 disabled={guests <= 1}
@@ -127,7 +139,7 @@ export const SearchCompact = ({ variant = 'block', value, onSubmit }: SearchComp
               </button>
               <button
                 type="button"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-300 text-slate-600 transition hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-300 text-slate-600 transition hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
                 aria-label="Adicionar hóspede"
                 onClick={() => setGuests((prev) => prev + 1)}
               >
@@ -137,10 +149,10 @@ export const SearchCompact = ({ variant = 'block', value, onSubmit }: SearchComp
           </div>
         </div>
 
-        <div className="md:col-span-1 md:ml-auto md:flex md:items-end">
+        <div className="md:flex md:items-end md:justify-end">
           <button
             type="submit"
-            className="mt-2 inline-flex h-11 w-full items-center justify-center rounded-lg bg-teal-600 px-6 text-sm font-medium text-white transition hover:bg-teal-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 md:mt-0 md:w-auto"
+            className="mt-2 inline-flex h-11 w-full items-center justify-center rounded-lg bg-primary-600 px-6 text-sm font-medium text-white transition hover:bg-primary-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 md:mt-0 md:w-auto"
             data-evt="search_submit"
           >
             Buscar
