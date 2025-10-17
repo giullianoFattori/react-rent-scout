@@ -3,7 +3,9 @@ import flowbitePlugin from 'flowbite/plugin';
 import flowbiteReact from 'flowbite-react/tailwind';
 import tailwindcssAnimate from 'tailwindcss-animate';
 
-import { colors, radius, shadows, spacing, typography } from './src/styles/tokens';
+import { colors as tokenColors, radius, shadows, spacing, typography } from './src/styles/tokens';
+
+const palette = tokenColors as Record<string, any>;
 
 const config = {
   content: [
@@ -15,7 +17,21 @@ const config = {
   darkMode: ['class'],
   theme: {
     extend: {
-      colors,
+      colors: {
+        ...palette,
+        primary: {
+          ...palette.primary,
+          600: '#0d9488',
+          700: '#0f766e',
+        },
+        neutral: {
+          ...palette.neutral,
+          bg: '#f8fafc',
+          text: '#0f172a',
+          sub: '#475569',
+          border: '#e2e8f0',
+        },
+      },
       spacing,
       borderRadius: radius,
       boxShadow: shadows,

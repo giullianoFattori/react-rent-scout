@@ -1,16 +1,4 @@
-/**
- * Home.tsx
- *
- * Layout decisions:
- * - Estrutura mobile-first com container centralizado (max-w-7xl) e seções verticais,
- *   mantendo o Header sticky conforme solicitado.
- * - O componente SearchCompact possui variantes para Home (block) e para o Header (inline).
- * - A página foi pensada para ser facilmente estendida à tela de Resultados: basta reutilizar
- *   SearchCompact + PropertyCard + FiltersBar e mover a seção de grid para uma rota dedicada,
- *   adicionando paginação e o mapa descritos na documentação.
- */
-
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
 import { Footer } from '../components/Footer';
 import { Header } from '../components/Header';
@@ -117,48 +105,20 @@ const faqs = [
   {
     question: 'Como funciona a reserva?',
     answer:
-      'Escolha as datas, informe os hóspedes e finalize o pagamento com segurança. Enviamos a confirmação detalhada em poucos minutos.',
+      'Você escolhe datas e hóspedes, verifica o total e confirma o pagamento. Enviamos a confirmação em poucos minutos.',
   },
   {
-    question: 'Quais taxas existem?',
-    answer:
-      'Mostramos o preço total estimado antes de pagar, incluindo taxas de limpeza e serviço. Sem taxas ocultas.',
+    question: 'Existem taxas ocultas?',
+    answer: 'Não. Exibimos o total estimado antes de você reservar.',
   },
   {
-    question: 'O que acontece se eu precisar cancelar?',
-    answer:
-      'Cada imóvel possui política específica. Destacamos as regras de cancelamento antes da reserva para você decidir com confiança.',
+    question: 'Posso cancelar?',
+    answer: 'Sim. Confira a política da acomodação antes de concluir a reserva.',
   },
 ];
 
-const AccordionItem = ({
-  question,
-  answer,
-  isOpen,
-  onToggle,
-}: {
-  question: string;
-  answer: string;
-  isOpen: boolean;
-  onToggle: () => void;
-}) => (
-  <div className="border-b border-slate-200 py-3">
-    <button
-      type="button"
-      onClick={onToggle}
-      className="flex w-full items-center justify-between text-left text-base font-medium text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
-      aria-expanded={isOpen}
-    >
-      {question}
-      <span className="ml-4 text-teal-600">{isOpen ? '−' : '+'}</span>
-    </button>
-    {isOpen && <p className="mt-2 text-sm text-slate-600">{answer}</p>}
-  </div>
-);
-
 export const Home = () => {
   const [searchSummary, setSearchSummary] = useState<SearchCompactPayload>();
-  const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   const handleSearch = (payload: SearchCompactPayload) => {
     setSearchSummary(payload);
@@ -166,36 +126,32 @@ export const Home = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <Header onSearch={handleSearch} />
+    <div className="min-h-screen bg-slate-50 text-slate-900">
+      <Header />
 
-      <main className="space-y-10 pb-10 pt-6 md:pb-16 md:pt-10">
-        <section className="max-w-7xl mx-auto px-4 md:px-6 text-center">
-          <h1 className="text-2xl font-semibold text-slate-900 md:text-3xl">Encontre a estadia perfeita</h1>
-          <p className="mt-2 text-base text-slate-600">
-            Curadoria de casas e apartamentos. Sem taxa oculta e suporte em português.
-          </p>
+      <main className="pb-12 pt-6 md:pb-16 md:pt-10">
+        <section className="mx-auto max-w-7xl px-4 text-center md:px-6">
+          <div className="py-6 md:py-10">
+            <h1 className="text-2xl font-semibold text-slate-900 md:text-3xl">Encontre a estadia perfeita</h1>
+            <p className="mt-2 text-sm text-slate-600 md:text-base">
+              Curadoria de casas e apartamentos. Sem taxa oculta e suporte em português.
+            </p>
+          </div>
         </section>
 
-        <section className="px-4 md:px-6">
-          <div className="max-w-5xl mx-auto bg-white border border-slate-200 rounded-xl shadow-sm p-3 md:p-4">
+        <section className="mx-auto max-w-5xl px-4 md:px-6">
+          <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm md:p-4">
             <SearchCompact variant="block" onSubmit={handleSearch} value={searchSummary} />
           </div>
         </section>
 
-        <section aria-labelledby="collections-heading" className="max-w-7xl mx-auto px-4 md:px-6">
-          <div className="flex flex-col items-center gap-2 text-center">
-            <h2 id="collections-heading" className="text-xl font-semibold text-slate-900">
-              Descubra por destino ou estilo
-            </h2>
-            <span className="text-sm text-slate-500">Toque em um chip para iniciar uma busca rápida</span>
-          </div>
+        <section className="mx-auto max-w-7xl px-4 md:px-6">
           <div className="mt-4 flex flex-wrap justify-center gap-3">
             {collections.map((collection) => (
               <button
                 key={collection}
                 type="button"
-                className="inline-flex h-9 items-center rounded-full bg-slate-100 px-4 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
+                className="inline-flex h-9 items-center rounded-full bg-slate-100 px-4 text-sm font-medium text-slate-700 transition hover:bg-slate-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
                 data-evt="cta_click"
                 data-ctx="collection_chip"
               >
@@ -205,39 +161,31 @@ export const Home = () => {
           </div>
         </section>
 
-        <section aria-labelledby="properties-heading" className="max-w-7xl mx-auto px-4 md:px-6 py-8">
-          <div className="flex flex-col gap-6">
-            <div className="flex items-baseline justify-between gap-4">
-              <h2 id="properties-heading" className="text-xl font-semibold text-slate-900">
-                Sugestões para você
-              </h2>
-              <span className="text-sm text-slate-500">Baseado nas pesquisas mais populares desta semana</span>
-            </div>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {properties.map((property) => (
-                <PropertyCard key={property.title} {...property} />
-              ))}
-            </div>
+        <section className="mx-auto max-w-7xl px-4 py-8 md:px-6">
+          <div className="flex flex-col gap-2 text-left">
+            <h2 className="text-xl font-semibold text-slate-900 md:text-2xl">Sugestões para você</h2>
+            <p className="text-sm text-slate-600 md:text-base">Baseado nas pesquisas mais populares desta semana.</p>
+          </div>
+          <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {properties.map((property) => (
+              <PropertyCard key={property.title} {...property} />
+            ))}
           </div>
         </section>
 
-        <section aria-labelledby="faq-heading" className="max-w-7xl mx-auto px-4 md:px-6">
-          <div className="rounded-xl border border-slate-200 bg-white px-4 py-6 shadow-sm md:px-6 md:py-8">
-            <h2 id="faq-heading" className="text-xl font-semibold text-slate-900">
-              FAQ curto (3 itens)
-            </h2>
-            <div className="mt-4">
-              {faqs.map((faq, index) => (
-                <AccordionItem
-                  key={faq.question}
-                  question={faq.question}
-                  answer={faq.answer}
-                  isOpen={openFaq === index}
-                  onToggle={() => setOpenFaq((current) => (current === index ? null : index))}
-                />
-              ))}
-            </div>
-          </div>
+        <section className="mx-auto max-w-7xl px-4 py-10 md:px-6">
+          <h2 className="sr-only">FAQ</h2>
+          {faqs.map((faq) => (
+            <details
+              key={faq.question}
+              className="border-b border-slate-200 py-3 first:border-t last:border-b-0"
+            >
+              <summary className="cursor-pointer text-base font-medium text-slate-900 transition hover:text-slate-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600">
+                {faq.question}
+              </summary>
+              <p className="mt-2 text-sm text-slate-600 md:text-base">{faq.answer}</p>
+            </details>
+          ))}
         </section>
       </main>
 
