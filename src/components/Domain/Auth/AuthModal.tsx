@@ -1,4 +1,4 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, RefObject, useRef, useState } from 'react';
 import { Modal, Tabs } from 'flowbite-react';
 
 import { Button, Stack, Text, TextInput } from '../../Core';
@@ -22,6 +22,7 @@ export interface AuthModalProps {
 export const AuthModal = ({ open, onClose, onAuthenticate, initialMode = 'login', loading = false }: AuthModalProps) => {
   const [mode, setMode] = useState<AuthMode>(initialMode);
   const [credentials, setCredentials] = useState<AuthCredentials>({ email: '', password: '' });
+  const emailFieldRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
@@ -29,7 +30,7 @@ export const AuthModal = ({ open, onClose, onAuthenticate, initialMode = 'login'
   };
 
   return (
-    <Modal show={open} onClose={onClose} initialFocus="#auth-email" aria-labelledby="auth-modal-title">
+    <Modal show={open} onClose={onClose} initialFocus={emailFieldRef} aria-labelledby="auth-modal-title">
       <Modal.Header>
         <Text as="span" id="auth-modal-title" weight="semibold">
           {mode === 'login' ? 'Acesse sua conta' : 'Crie uma conta'}
@@ -44,6 +45,7 @@ export const AuthModal = ({ open, onClose, onAuthenticate, initialMode = 'login'
               credentials={credentials}
               onChange={setCredentials}
               onSubmit={handleSubmit}
+              emailRef={emailFieldRef}
             />
           </Tabs.Item>
           <Tabs.Item title="Criar conta">
@@ -53,6 +55,7 @@ export const AuthModal = ({ open, onClose, onAuthenticate, initialMode = 'login'
               credentials={credentials}
               onChange={setCredentials}
               onSubmit={handleSubmit}
+              emailRef={emailFieldRef}
             />
           </Tabs.Item>
         </Tabs>
@@ -67,9 +70,10 @@ interface AuthFormProps {
   credentials: AuthCredentials;
   onChange: (credentials: AuthCredentials) => void;
   onSubmit: (event: FormEvent) => void;
+  emailRef?: RefObject<HTMLInputElement>;
 }
 
-const AuthForm = ({ mode, loading, credentials, onChange, onSubmit }: AuthFormProps) => (
+const AuthForm = ({ mode, loading, credentials, onChange, onSubmit, emailRef }: AuthFormProps) => (
   <form className="flex flex-col gap-sm pt-sm" onSubmit={onSubmit}>
     {mode === 'register' && (
       <TextInput
@@ -90,6 +94,7 @@ const AuthForm = ({ mode, loading, credentials, onChange, onSubmit }: AuthFormPr
       onChange={(event) => onChange({ ...credentials, email: event.target.value })}
       placeholder="exemplo@email.com"
       autoComplete="email"
+      ref={emailRef}
       required
     />
     <TextInput

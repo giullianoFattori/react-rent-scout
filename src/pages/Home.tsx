@@ -16,17 +16,6 @@ const collections = [
   'Família grande',
 ];
 
-const collectionIcons: Record<string, string> = {
-  'Buenos Aires': '🌆',
-  Ubatuba: '🌴',
-  Praia: '🏖️',
-  'Pet-friendly': '🐾',
-  'Com cozinha': '🍳',
-  'Vista para o mar': '🌊',
-  Coworking: '💼',
-  'Família grande': '👨‍👩‍👧‍👦',
-};
-
 const properties: PropertyCardProps[] = [
   {
     title: 'Loft iluminado com varanda e vista para a cidade',
