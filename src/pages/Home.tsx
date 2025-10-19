@@ -146,18 +146,20 @@ export const Home = () => {
         </section>
 
         <section className="mx-auto max-w-7xl px-4 md:px-6">
-          <div className="mt-4 flex flex-wrap justify-center gap-3">
-            {collections.map((collection) => (
-              <button
-                key={collection}
-                type="button"
-                className="inline-flex h-9 items-center rounded-full bg-slate-100 px-4 text-sm font-medium text-slate-700 transition hover:bg-slate-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
-                data-evt="cta_click"
-                data-ctx="collection_chip"
-              >
-                {collection}
-              </button>
-            ))}
+          <div className="mt-4 md:mt-6">
+            <div className="flex justify-start gap-3 overflow-x-auto snap-x snap-mandatory md:gap-4">
+              {collections.map((collection) => (
+                <button
+                  key={collection}
+                  type="button"
+                  className="inline-flex shrink-0 items-center rounded-full bg-slate-100 px-5 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
+                  data-evt="cta_click"
+                  data-ctx="collection_chip"
+                >
+                  {collection}
+                </button>
+              ))}
+            </div>
           </div>
         </section>
 
