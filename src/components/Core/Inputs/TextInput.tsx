@@ -8,12 +8,6 @@ type InputState = 'default' | 'error' | 'success';
 type InputDensity = 'compact' | 'comfortable';
 type InputSize = 'sm' | 'md' | 'lg';
 
-const stateRing: Record<InputState, string> = {
-  default: 'focus-visible:ring-brand-400',
-  error: 'focus-visible:ring-feedback-error',
-  success: 'focus-visible:ring-feedback-success',
-};
-
 const stateBorder: Record<InputState, string> = {
   default: 'border-border-subtle focus-visible:border-brand-400',
   error: 'border-feedback-error',

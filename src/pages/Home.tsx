@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { Footer } from '../components/Footer';
 import { Header } from '../components/Header';
@@ -125,47 +125,88 @@ export const Home = () => {
     console.info('search_submit', payload);
   };
 
+  const formattedSummary = useMemo(() => {
+    if (!searchSummary) {
+      return '';
+    }
+
+    const formatDate = (value: string) => {
+      if (!value) {
+        return '';
+      }
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) {
+        return '';
+      }
+      return new Intl.DateTimeFormat('pt-BR', {
+        day: '2-digit',
+        month: 'short',
+      }).format(date);
+    };
+
+    const parts: string[] = [];
+
+    parts.push(searchSummary.destination || 'Destino flexível');
+
+    const formattedCheckIn = formatDate(searchSummary.checkIn);
+    const formattedCheckOut = formatDate(searchSummary.checkOut);
+
+    if (formattedCheckIn && formattedCheckOut) {
+      parts.push(`${formattedCheckIn} – ${formattedCheckOut}`);
+    } else {
+      parts.push('Datas flexíveis');
+    }
+
+    const guestsLabel = searchSummary.guests > 1 ? `${searchSummary.guests} hóspedes` : `${searchSummary.guests} hóspede`;
+    parts.push(guestsLabel);
+
+    return parts.join(' · ');
+  }, [searchSummary]);
+
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-neutral-bg text-neutral-text">
       <Header />
 
-      <main className="pb-12 pt-6 md:pb-16 md:pt-10">
-        <section className="mx-auto max-w-7xl px-4 text-center md:px-6">
-          <div className="py-6 md:py-10">
-            <h1 className="text-2xl font-semibold text-slate-900 md:text-3xl">Encontre a estadia perfeita</h1>
-            <p className="mt-2 text-sm text-slate-600 md:text-base">
-              Curadoria de casas e apartamentos. Sem taxa oculta e suporte em português.
-            </p>
-          </div>
+      <main>
+        <section className="mx-auto max-w-7xl px-4 py-6 text-center md:px-6 md:py-10">
+          <h1 className="text-2xl font-semibold text-slate-900 md:text-3xl">Encontre a estadia perfeita</h1>
+          <p className="mt-2 text-slate-600">
+            Curadoria de casas e apartamentos. Sem taxa oculta e suporte em português.
+          </p>
         </section>
 
         <section className="mx-auto max-w-5xl px-4 md:px-6">
           <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm md:p-4">
-            <SearchCompact variant="block" onSubmit={handleSearch} value={searchSummary} />
+            <SearchCompact onSubmit={handleSearch} value={searchSummary} />
           </div>
+          {formattedSummary && (
+            <p className="mt-3 text-center text-xs font-semibold uppercase tracking-wide text-primary-700">
+              {formattedSummary}
+            </p>
+          )}
         </section>
 
         <section className="mx-auto max-w-7xl px-4 md:px-6">
-          <div className="mt-4 flex flex-wrap justify-center gap-3">
-            {collections.map((collection) => (
-              <button
-                key={collection}
-                type="button"
-                className="inline-flex h-9 items-center rounded-full bg-slate-100 px-4 text-sm font-medium text-slate-700 transition hover:bg-slate-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
-                data-evt="cta_click"
-                data-ctx="collection_chip"
-              >
-                {collection}
-              </button>
-            ))}
+          <div className="mt-4 md:mt-6">
+            <div className="flex justify-start gap-3 overflow-x-auto snap-x snap-mandatory md:gap-4">
+              {collections.map((collection) => (
+                <button
+                  key={collection}
+                  type="button"
+                  className="inline-flex shrink-0 items-center rounded-full bg-slate-100 px-5 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
+                  data-evt="cta_click"
+                  data-ctx="collection_chip"
+                >
+                  {collection}
+                </button>
+              ))}
+            </div>
           </div>
         </section>
 
-        <section className="mx-auto max-w-7xl px-4 py-8 md:px-6">
-          <div className="flex flex-col gap-2 text-left">
-            <h2 className="text-xl font-semibold text-slate-900 md:text-2xl">Sugestões para você</h2>
-            <p className="text-sm text-slate-600 md:text-base">Baseado nas pesquisas mais populares desta semana.</p>
-          </div>
+        <section className="mx-auto mt-10 max-w-7xl px-4 py-8 md:px-6">
+          <h2 className="text-xl font-semibold text-slate-900 md:text-2xl">Sugestões para você</h2>
+          <p className="mt-2 text-sm text-slate-600">Selecionamos espaços com alto índice de avaliação e anfitriões confiáveis.</p>
           <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {properties.map((property) => (
               <PropertyCard key={property.title} {...property} />
@@ -173,19 +214,21 @@ export const Home = () => {
           </div>
         </section>
 
-        <section className="mx-auto max-w-7xl px-4 py-10 md:px-6">
+        <section id="faq" className="mx-auto max-w-7xl px-4 py-10 md:px-6">
           <h2 className="sr-only">FAQ</h2>
-          {faqs.map((faq) => (
-            <details
-              key={faq.question}
-              className="border-b border-slate-200 py-3 first:border-t last:border-b-0"
-            >
-              <summary className="cursor-pointer text-base font-medium text-slate-900 transition hover:text-slate-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600">
-                {faq.question}
-              </summary>
-              <p className="mt-2 text-sm text-slate-600 md:text-base">{faq.answer}</p>
-            </details>
-          ))}
+          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:p-6">
+            {faqs.map((faq, index) => (
+              <details
+                key={faq.question}
+                className={`py-3 ${index !== faqs.length - 1 ? 'border-b border-slate-200' : ''}`}
+              >
+                <summary className="cursor-pointer text-left text-base font-medium text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-600">
+                  {faq.question}
+                </summary>
+                <p className="mt-2 text-sm text-slate-600">{faq.answer}</p>
+              </details>
+            ))}
+          </div>
         </section>
       </main>
 
