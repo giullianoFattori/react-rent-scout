@@ -38,8 +38,8 @@ export const PropertyCard = ({
   const priceLabel = useMemo(() => currencyFormatter(pricePerNight, currency), [pricePerNight, currency]);
 
   return (
-    <article className="group bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition hover:border-slate-300 hover:shadow-md focus-within:border-teal-500 focus-within:shadow-md">
-      <div className="relative overflow-hidden rounded-xl">
+    <article className="group flex h-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:border-slate-300 hover:shadow-md focus-within:border-primary-600 focus-within:shadow-md">
+      <div className="relative">
         <img
           src={safeImages[0].src}
           alt={safeImages[0].alt}
