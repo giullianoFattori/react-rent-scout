@@ -24,14 +24,15 @@ const HeaderLocale = () => <span className="hidden sm:inline text-slate-700">PT-
 
 type HeaderLoginButtonProps = ButtonHTMLAttributes<HTMLButtonElement>;
 
+const baseHeaderButtonClassName =
+  "inline-flex h-9 px-4 items-center rounded-lg bg-teal-600 text-white hover:bg-teal-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-600 shadow-sm";
+
 const HeaderLoginButton = ({ className, ...props }: HeaderLoginButtonProps) => (
   <button
     type="button"
     data-evt="header_login_click"
     {...props}
-    className={`inline-flex h-9 px-4 items-center rounded-lg bg-teal-600 text-white hover:bg-teal-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-600 shadow-sm${
-      className ? ` ${className}` : ""
-    }`}
+    className={className ? `${baseHeaderButtonClassName} ${className}` : baseHeaderButtonClassName}
   >
     Login
   </button>

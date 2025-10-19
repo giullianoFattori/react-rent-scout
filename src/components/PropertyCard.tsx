@@ -38,7 +38,7 @@ export const PropertyCard = ({
   const priceLabel = useMemo(() => currencyFormatter(pricePerNight, currency), [pricePerNight, currency]);
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:border-slate-300 hover:shadow-md focus-within:border-primary-600 focus-within:shadow-md">
+    <article className="group overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:border-slate-300 hover:shadow-md">
       <div className="relative">
         <img
           src={safeImages[0].src}
@@ -47,21 +47,21 @@ export const PropertyCard = ({
           loading="lazy"
         />
         {badge && (
-          <span className="absolute left-4 top-4 rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-primary-700 shadow-sm ring-1 ring-black/5">
+          <span className="absolute left-4 top-4 rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-teal-700 shadow-sm ring-1 ring-black/5">
             {badge}
           </span>
         )}
       </div>
-      <div className="flex flex-col gap-3 p-3">
-        <h3 className="line-clamp-1 text-base font-medium text-slate-900">{title}</h3>
-        <div className="text-sm text-slate-600" aria-label={`Localização ${location} com avaliação ${rating}`}>
-          {`${location} • ★ ${rating.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`}
+      <div className="p-3">
+        <h3 className="line-clamp-1 text-slate-900 font-medium">{title}</h3>
+        <div className="mt-1 flex items-center gap-2 text-sm text-slate-600" aria-label={`Localização ${location} com avaliação ${rating}`}>
+          <span>{location}</span>
+          <span>•</span>
+          <span>{`★ ${rating.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`}</span>
         </div>
-        <div>
-          <p className="text-base font-semibold text-slate-900">
-            {priceLabel}
-            <span className="ml-1 text-xs font-normal text-slate-500">/ noite</span>
-          </p>
+        <div className="mt-1 text-slate-900 font-semibold">
+          {priceLabel}
+          <span className="ml-1 text-xs font-normal text-slate-500">/ noite</span>
         </div>
       </div>
     </article>

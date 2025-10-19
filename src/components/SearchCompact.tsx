@@ -14,7 +14,7 @@ export interface SearchCompactProps {
 }
 
 const baseInput =
-  'h-11 w-full rounded-lg border border-slate-300 bg-white px-4 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600/40';
+  'h-11 w-full rounded-lg border border-slate-300 bg-white px-4 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600';
 
 export const SearchCompact = ({ variant = 'block', value, onSubmit }: SearchCompactProps) => {
   const [destination, setDestination] = useState(value?.destination ?? '');
@@ -64,7 +64,7 @@ export const SearchCompact = ({ variant = 'block', value, onSubmit }: SearchComp
 
   return (
     <form onSubmit={handleSubmit} noValidate>
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-[1.2fr,1.2fr,1fr,0.7fr] md:gap-2">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-[1.2fr,1fr,1fr,0.6fr] md:gap-2">
         <div className="flex flex-col gap-1">
           <label htmlFor="destination-search" className="sr-only">
             Destino
@@ -142,7 +142,7 @@ export const SearchCompact = ({ variant = 'block', value, onSubmit }: SearchComp
         <div className="md:flex md:items-center md:justify-end">
           <button
             type="submit"
-            className="h-11 w-full rounded-lg bg-primary-600 px-6 text-sm font-semibold text-white transition hover:bg-primary-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-600 md:w-auto"
+            className="h-11 w-full rounded-lg bg-teal-600 px-6 text-sm font-semibold text-white transition hover:bg-teal-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-600 md:w-auto"
             data-evt="search_submit"
           >
             Buscar
