@@ -1,4 +1,4 @@
-import { ElementType, ReactNode } from 'react';
+import { ComponentPropsWithoutRef, ElementType, ReactNode } from 'react';
 import { twMerge } from 'tailwind-merge';
 
 type TextTone = 'primary' | 'secondary' | 'muted' | 'inverse' | 'success' | 'warning' | 'error';
@@ -27,25 +27,31 @@ const weightMap: Record<TextWeight, string> = {
   semibold: 'font-semibold',
 };
 
-export interface TextProps {
-  as?: ElementType;
+export type TextProps<C extends ElementType = 'p'> = {
+  as?: C;
   tone?: TextTone;
   size?: TextSize;
   weight?: TextWeight;
   children: ReactNode;
   className?: string;
-}
+} & Omit<ComponentPropsWithoutRef<C>, 'as' | 'children' | 'className'>;
 
-export const Text = ({
-  as: Component = 'p',
+export const Text = <C extends ElementType = 'p'>({
+  as,
   tone = 'primary',
   size = 'md',
   weight = 'regular',
   children,
   className,
-}: TextProps) => {
+  ...rest
+}: TextProps<C>) => {
+  const Component = (as ?? 'p') as ElementType;
+
   return (
-    <Component className={twMerge('leading-relaxed', toneMap[tone], sizeMap[size], weightMap[weight], className)}>
+    <Component
+      className={twMerge('leading-relaxed', toneMap[tone], sizeMap[size], weightMap[weight], className)}
+      {...rest}
+    >
       {children}
     </Component>
   );
