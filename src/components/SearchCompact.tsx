@@ -35,7 +35,7 @@ type GuestCounts = Record<GuestType, number>;
 const MIN_ADULTS = 1;
 
 const createInitialGuests = (total?: number): GuestCounts => ({
-  adults: Math.max(MIN_ADULTS, total ?? 2),
+  adults: total && total > 0 ? Math.max(MIN_ADULTS, total) : 0,
   children: 0,
   babies: 0,
   pets: 0,
@@ -45,12 +45,27 @@ const guestRows: ReadonlyArray<{
   label: string;
   description: string;
   key: GuestType;
+  min: number;
 }> = [
-  { label: 'Adultos', description: '13+ anos', key: 'adults' },
-  { label: 'Crianças', description: '2–12 anos', key: 'children' },
-  { label: 'Bebês', description: 'Menos de 2 anos', key: 'babies' },
-  { label: 'Pets', description: 'Animais de estimação', key: 'pets' },
+  { label: 'Adultos', description: '13+ anos', key: 'adults', min: MIN_ADULTS },
+  { label: 'Crianças', description: '2–12 anos', key: 'children', min: 0 },
+  { label: 'Bebês', description: 'Menos de 2 anos', key: 'babies', min: 0 },
+  { label: 'Pets', description: 'Animais de estimação', key: 'pets', min: 0 },
 ];
+
+const emptyGuests: GuestCounts = { adults: 0, children: 0, babies: 0, pets: 0 };
+
+const labelGuests = ({ adults, children, babies, pets }: GuestCounts) => {
+  const total = adults + children + babies;
+  const parts = [
+    total
+      ? `${total} ${total > 1 ? 'hóspedes' : 'hóspede'}`
+      : 'Hóspedes',
+    pets ? `${pets} ${pets > 1 ? 'pets' : 'pet'}` : '',
+  ].filter(Boolean);
+
+  return parts.join(', ');
+};
 
 const maskDate = (value: string) => {
   const digits = value.replace(/\D/g, '').slice(0, 8);
@@ -178,32 +193,33 @@ export const SearchCompact = ({ variant = 'block', value, onSubmit }: SearchComp
     [guestCounts],
   );
 
-  const guestButtonLabel = useMemo(() => {
-    const guestLabel =
-      totalGuests === 1 ? '1 hóspede' : `${totalGuests} hóspedes`;
-    const petCount = guestCounts.pets;
-
-    if (petCount === 0) {
-      return guestLabel;
-    }
-
-    const petLabel = petCount === 1 ? '1 pet' : `${petCount} pets`;
-    return `${guestLabel}, ${petLabel}`;
-  }, [guestCounts, totalGuests]);
+  const guestButtonLabel = useMemo(
+    () => labelGuests(guestCounts),
+    [guestCounts],
+  );
 
   const updateGuestCount = (type: GuestType, delta: number) => {
     setGuestCounts((prev) => {
-      const next = { ...prev };
-      const nextValue = prev[type] + delta;
+      const next: GuestCounts = {
+        ...prev,
+        [type]: Math.max(0, prev[type] + delta),
+      };
 
       if (type === 'adults') {
-        next[type] = Math.max(MIN_ADULTS, nextValue);
-      } else {
-        next[type] = Math.max(0, nextValue);
+        const others = next.children + next.babies + next.pets;
+        if (next.adults < MIN_ADULTS && others > 0) {
+          next.adults = MIN_ADULTS;
+        }
+      } else if (delta > 0 && next.adults < MIN_ADULTS) {
+        next.adults = MIN_ADULTS;
       }
 
       return next;
     });
+  };
+
+  const clearGuests = () => {
+    setGuestCounts({ ...emptyGuests });
   };
 
   const resetDateErrors = () => {
@@ -342,18 +358,35 @@ export const SearchCompact = ({ variant = 'block', value, onSubmit }: SearchComp
               aria-controls={`guests-panel-${variant}`}
             >
               <span>{guestButtonLabel}</span>
+              <svg
+                aria-hidden
+                viewBox="0 0 24 24"
+                className="h-4 w-4 text-slate-500"
+              >
+                <path
+                  d="m6 9 6 6 6-6"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
             </button>
             {guestSelectorOpen ? (
               <div
                 id={`guests-panel-${variant}`}
                 role="dialog"
                 aria-label="Selecionar hóspedes"
-                className="absolute right-0 z-40 mt-2 w-72 rounded-xl border border-slate-200 bg-white p-4 shadow-lg"
+                className="absolute right-0 z-40 mt-2 w-72 max-w-[min(18rem,calc(100vw-2rem))] rounded-xl border border-slate-200 bg-white p-3 shadow-lg"
               >
-                {guestRows.map(({ label, description, key }) => {
+                {guestRows.map(({ label, description, key, min }) => {
                   const valueForType = guestCounts[key];
-                  const isAdults = key === 'adults';
-                  const minValue = isAdults ? MIN_ADULTS : 0;
+                  const dynamicMin =
+                    key === 'adults' &&
+                    guestCounts.children + guestCounts.babies + guestCounts.pets === 0
+                      ? 0
+                      : min;
 
                   return (
                     <div
@@ -367,10 +400,10 @@ export const SearchCompact = ({ variant = 'block', value, onSubmit }: SearchComp
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-300 text-slate-700 hover:border-slate-400 hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-600 disabled:cursor-not-allowed disabled:opacity-60"
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-300 text-slate-700 hover:border-slate-400 hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-600 disabled:cursor-not-allowed disabled:opacity-40"
                           onClick={() => updateGuestCount(key, -1)}
                           aria-label={`Remover ${label.toLowerCase()}`}
-                          disabled={valueForType <= minValue}
+                          disabled={valueForType <= dynamicMin}
                         >
                           −
                         </button>
@@ -379,7 +412,7 @@ export const SearchCompact = ({ variant = 'block', value, onSubmit }: SearchComp
                         </span>
                         <button
                           type="button"
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-300 text-slate-700 hover:border-slate-400 hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-600"
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-300 text-slate-700 hover:border-slate-400 hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-600"
                           onClick={() => updateGuestCount(key, 1)}
                           aria-label={`Adicionar ${label.toLowerCase()}`}
                         >
@@ -394,18 +427,17 @@ export const SearchCompact = ({ variant = 'block', value, onSubmit }: SearchComp
                     type="button"
                     className="text-sm font-medium text-teal-600 hover:text-teal-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-600"
                     onClick={() => {
-                      setGuestCounts(createInitialGuests());
-                      setGuestSelectorOpen(false);
+                      clearGuests();
                     }}
                   >
                     Limpar
                   </button>
                   <button
                     type="button"
-                    className="inline-flex items-center rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-600"
+                    className="inline-flex h-9 items-center rounded-lg bg-teal-600 px-4 text-sm font-semibold text-white hover:bg-teal-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-600"
                     onClick={() => setGuestSelectorOpen(false)}
                   >
-                    Concluir
+                    Aplicar
                   </button>
                 </div>
               </div>
