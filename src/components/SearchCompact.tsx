@@ -32,7 +32,7 @@ export interface SearchCompactProps {
 }
 
 const baseInput =
-  'h-11 w-full rounded-lg border border-slate-300 bg-white px-4 text-sm text-slate-900 placeholder-slate-400 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600';
+  'h-11 w-full rounded-lg border border-slate-300 bg-white px-4 text-sm text-slate-900 placeholder-slate-400 transition focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 disabled:placeholder-slate-300 disabled:opacity-70';
 const errorInput =
   'border-red-500 focus:border-red-500 focus:ring-red-600 focus:outline-none';
 const primaryButton =
@@ -158,6 +158,8 @@ export const SearchCompact = ({ variant = 'block', value, onSubmit }: SearchComp
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [focusedDateInput, setFocusedDateInput] = useState<'checkin' | 'checkout'>('checkin');
   const calendarRef = useRef<HTMLDivElement>(null);
+  const checkInInputRef = useRef<HTMLInputElement>(null);
+  const checkOutInputRef = useRef<HTMLInputElement>(null);
   const [calendarMonth, setCalendarMonth] = useState(() =>
     startOfMonth(new Date()),
   );
@@ -306,6 +308,12 @@ export const SearchCompact = ({ variant = 'block', value, onSubmit }: SearchComp
     }
   };
 
+  const focusCheckoutInput = () => {
+    requestAnimationFrame(() => {
+      checkOutInputRef.current?.focus();
+    });
+  };
+
   const openCalendar = (target: 'checkin' | 'checkout') => {
     setFocusedDateInput(target);
     const baseDate =
@@ -326,13 +334,32 @@ export const SearchCompact = ({ variant = 'block', value, onSubmit }: SearchComp
     const masked = maskDate(value);
     setCheckIn(masked);
 
+    let clearedCheckout = false;
     const nextDate = parseDate(masked);
     if (nextDate) {
       ensureCalendarMonthVisible(nextDate);
+      if (masked.length === 10) {
+        focusCheckoutInput();
+      }
+      if (checkOut) {
+        const parsedExistingCheckOut = parseDate(checkOut);
+        if (!parsedExistingCheckOut || !isAfter(parsedExistingCheckOut, nextDate)) {
+          setCheckOut('');
+          clearedCheckout = true;
+        }
+      }
     }
 
-    if (checkOut) {
+    if (!nextDate && checkOut) {
+      setCheckOut('');
+      clearedCheckout = true;
+    }
+
+    if (checkOut && !clearedCheckout) {
       setDateRangeError(validateDateRange(masked, checkOut));
+    } else if (clearedCheckout) {
+      setCheckOutError(null);
+      setDateRangeError(null);
     }
   };
 
@@ -362,6 +389,7 @@ export const SearchCompact = ({ variant = 'block', value, onSubmit }: SearchComp
       setDateRangeError(null);
       setFocusedDateInput('checkout');
       ensureCalendarMonthVisible(selected);
+      focusCheckoutInput();
       return;
     }
 
@@ -373,6 +401,7 @@ export const SearchCompact = ({ variant = 'block', value, onSubmit }: SearchComp
       setDateRangeError(null);
       setFocusedDateInput('checkout');
       ensureCalendarMonthVisible(selected);
+      focusCheckoutInput();
       return;
     }
 
@@ -446,7 +475,7 @@ export const SearchCompact = ({ variant = 'block', value, onSubmit }: SearchComp
 
   return (
     <form onSubmit={handleSubmit} noValidate>
-      <div className="grid grid-cols-1 items-center gap-3 md:grid md:grid-cols-[1.2fr,1fr,1fr,0.6fr] md:gap-2">
+      <div className="grid grid-cols-1 items-start gap-3 md:grid md:grid-cols-[1.2fr,1fr,1fr,0.6fr] md:gap-2">
         <div className="flex flex-col gap-1">
           <label htmlFor="destination-search" className="sr-only">
             Destino
@@ -475,6 +504,7 @@ export const SearchCompact = ({ variant = 'block', value, onSubmit }: SearchComp
                 inputMode="numeric"
                 pattern={String.raw`\d{2}/\d{2}/\d{4}`}
                 placeholder="Check-in"
+                ref={checkInInputRef}
                 className={`${baseInput} ${checkInError ? errorInput : ''}`.trim()}
                 value={checkIn}
                 aria-describedby={`hint-date-${variant}`}
@@ -509,10 +539,9 @@ export const SearchCompact = ({ variant = 'block', value, onSubmit }: SearchComp
                 inputMode="numeric"
                 pattern={String.raw`\d{2}/\d{2}/\d{4}`}
                 placeholder="Check-out"
+                ref={checkOutInputRef}
                 className={`${baseInput} ${
                   checkOutError ? errorInput : ''
-                } ${
-                  isCheckOutEnabled ? '' : 'cursor-not-allowed bg-slate-100 text-slate-400'
                 }`.trim()}
                 value={checkOut}
                 aria-invalid={checkOutError ? 'true' : undefined}
