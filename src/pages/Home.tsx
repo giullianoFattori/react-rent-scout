@@ -186,7 +186,7 @@ export const Home = () => {
           )}
         </section>
 
-        <section className="mx-auto mt-6 max-w-7xl px-4 md:px-6">
+        <section className="mx-auto mt-4 max-w-7xl px-4 md:px-6">
           <div className="flex flex-wrap justify-center gap-3">
             {collections.map((collection) => (
               <button
@@ -202,10 +202,13 @@ export const Home = () => {
           </div>
         </section>
 
-        <section className="mx-auto mt-10 max-w-7xl px-4 py-8 md:px-6">
+        <section className="mx-auto max-w-7xl px-4 pt-8 md:px-6">
           <h2 className="text-xl font-semibold text-slate-900 md:text-2xl">Sugestões para você</h2>
           <p className="mt-1 text-slate-600">Selecionamos espaços com alto índice de avaliação e anfitriões confiáveis.</p>
-          <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        </section>
+
+        <section className="mx-auto max-w-7xl px-4 py-4 md:px-6">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {properties.map((property) => (
               <PropertyCard key={property.title} {...property} />
             ))}

@@ -14,7 +14,7 @@ export interface SearchCompactProps {
 }
 
 const baseInput =
-  'h-11 w-full rounded-lg border border-slate-300 bg-white px-4 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600';
+  'h-11 w-full rounded-lg border border-slate-300 bg-white px-4 text-sm text-slate-900 placeholder-slate-400 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600';
 
 export const SearchCompact = ({ variant = 'block', value, onSubmit }: SearchCompactProps) => {
   const [destination, setDestination] = useState(value?.destination ?? '');
@@ -64,7 +64,7 @@ export const SearchCompact = ({ variant = 'block', value, onSubmit }: SearchComp
 
   return (
     <form onSubmit={handleSubmit} noValidate>
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-[1.2fr,1fr,1fr,0.6fr] md:gap-2">
+      <div className="grid grid-cols-1 gap-3 md:grid md:grid-cols-[1.2fr,1fr,1fr,0.6fr] md:gap-2">
         <div className="flex flex-col gap-1">
           <label htmlFor="destination-search" className="sr-only">
             Destino
