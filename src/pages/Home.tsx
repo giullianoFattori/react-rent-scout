@@ -16,17 +16,6 @@ const collections = [
   'Família grande',
 ];
 
-const collectionIcons: Record<string, string> = {
-  'Buenos Aires': '🌆',
-  Ubatuba: '🌴',
-  Praia: '🏖️',
-  'Pet-friendly': '🐾',
-  'Com cozinha': '🍳',
-  'Vista para o mar': '🌊',
-  Coworking: '💼',
-  'Família grande': '👨‍👩‍👧‍👦',
-};
-
 const properties: PropertyCardProps[] = [
   {
     title: 'Loft iluminado com varanda e vista para a cidade',
@@ -191,35 +180,35 @@ export const Home = () => {
             <SearchCompact onSubmit={handleSearch} value={searchSummary} />
           </div>
           {formattedSummary && (
-            <p className="mt-3 text-center text-xs font-semibold uppercase tracking-wide text-primary-700">
+            <p className="mt-3 text-center text-xs font-semibold uppercase tracking-wide text-teal-700">
               {formattedSummary}
             </p>
           )}
         </section>
 
-        <section className="mx-auto mt-6 max-w-7xl px-4 md:px-6">
+        <section className="mx-auto mt-4 max-w-7xl px-4 md:px-6">
           <div className="flex flex-wrap justify-center gap-3">
             {collections.map((collection) => (
               <button
                 key={collection}
                 type="button"
-                className="inline-flex items-center rounded-full bg-slate-100 px-4 py-2 text-sm text-slate-700 transition hover:bg-slate-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-600"
+                className="inline-flex h-9 items-center rounded-full bg-slate-100 px-4 text-sm text-slate-700 transition hover:bg-slate-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-600"
                 data-evt="cta_click"
                 data-ctx="collection_chip"
               >
-                <span className="mr-2" aria-hidden="true">
-                  {collectionIcons[collection]}
-                </span>
                 {collection}
               </button>
             ))}
           </div>
         </section>
 
-        <section className="mx-auto mt-10 max-w-7xl px-4 py-8 md:px-6">
+        <section className="mx-auto max-w-7xl px-4 pt-8 md:px-6">
           <h2 className="text-xl font-semibold text-slate-900 md:text-2xl">Sugestões para você</h2>
-          <p className="mt-2 text-sm text-slate-600">Selecionamos espaços com alto índice de avaliação e anfitriões confiáveis.</p>
-          <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <p className="mt-1 text-slate-600">Selecionamos espaços com alto índice de avaliação e anfitriões confiáveis.</p>
+        </section>
+
+        <section className="mx-auto max-w-7xl px-4 py-4 md:px-6">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {properties.map((property) => (
               <PropertyCard key={property.title} {...property} />
             ))}
