@@ -1,5 +1,7 @@
 import { useMemo } from 'react';
 
+import { InteractiveSurface } from './InteractiveSurface';
+
 export interface PropertyCardImage {
   src: string;
   alt: string;
@@ -38,7 +40,10 @@ export const PropertyCard = ({
   const priceLabel = useMemo(() => currencyFormatter(pricePerNight, currency), [pricePerNight, currency]);
 
   return (
-    <article className="group overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:border-slate-300 hover:shadow-md">
+    <InteractiveSurface
+      as="article"
+      className="group overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-colors hover:border-slate-300"
+    >
       <div className="relative">
         <img
           src={safeImages[0].src}
@@ -64,6 +69,6 @@ export const PropertyCard = ({
           <span className="ml-1 text-xs font-normal text-slate-500">/ noite</span>
         </div>
       </div>
-    </article>
+    </InteractiveSurface>
   );
 };
