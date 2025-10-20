@@ -1,7 +1,5 @@
 import { type Config } from 'tailwindcss';
 import flowbitePlugin from 'flowbite/plugin';
-import flowbiteReact from 'flowbite-react/tailwind';
-import tailwindcssAnimate from 'tailwindcss-animate';
 
 import { colors as tokenColors, radius, shadows, spacing, typography } from './src/styles/tokens';
 
@@ -41,7 +39,7 @@ const config = {
       fontWeight: typography.fontWeight,
     },
   },
-  plugins: [flowbitePlugin, flowbiteReact, tailwindcssAnimate],
+  plugins: [flowbitePlugin],
 } satisfies Config;
 
 export default config;
