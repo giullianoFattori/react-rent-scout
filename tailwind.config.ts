@@ -10,7 +10,7 @@ const palette = tokenColors as Record<string, any>;
 const config = {
   content: [
     './index.html',
-    './src/**/*.{ts,tsx}',
+    './src/**/*.{js,jsx,ts,tsx,html}',
     './node_modules/flowbite-react/**/*.{js,jsx,ts,tsx}',
     './node_modules/flowbite/**/*.{js,jsx,ts,tsx}',
   ],
