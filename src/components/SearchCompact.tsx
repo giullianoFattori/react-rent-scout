@@ -5,6 +5,18 @@ import {
   useRef,
   useState,
 } from 'react';
+import {
+  addDays,
+  addMonths,
+  endOfMonth,
+  format,
+  isAfter,
+  isBefore,
+  isSameDay,
+  isWithinInterval,
+  startOfMonth,
+  startOfWeek,
+} from '../utils/date';
 
 export interface SearchCompactPayload {
   destination: string;
@@ -143,6 +155,13 @@ export const SearchCompact = ({ variant = 'block', value, onSubmit }: SearchComp
   );
   const [guestSelectorOpen, setGuestSelectorOpen] = useState(false);
   const guestSelectorRef = useRef<HTMLDivElement>(null);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [focusedDateInput, setFocusedDateInput] = useState<'checkin' | 'checkout'>('checkin');
+  const calendarRef = useRef<HTMLDivElement>(null);
+  const [calendarMonth, setCalendarMonth] = useState(() =>
+    startOfMonth(new Date()),
+  );
+  const [hoveredDate, setHoveredDate] = useState<Date | null>(null);
   const [checkInError, setCheckInError] = useState<string | null>(null);
   const [checkOutError, setCheckOutError] = useState<string | null>(null);
   const [dateRangeError, setDateRangeError] = useState<string | null>(null);
@@ -185,8 +204,36 @@ export const SearchCompact = ({ variant = 'block', value, onSubmit }: SearchComp
     };
   }, [guestSelectorOpen]);
 
-  const labelClassName =
-    'sr-only md:static md:m-0 md:block md:h-auto md:w-auto md:overflow-visible md:whitespace-normal md:border-0 md:p-0 md:text-xs md:font-medium md:text-slate-500 md:[clip:auto] md:[clip-path:none]';
+  useEffect(() => {
+    if (!calendarOpen) {
+      return;
+    }
+
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (
+        calendarRef.current &&
+        !calendarRef.current.contains(event.target as Node)
+      ) {
+        setCalendarOpen(false);
+        setHoveredDate(null);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setCalendarOpen(false);
+        setHoveredDate(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [calendarOpen]);
 
   const totalGuests = useMemo(
     () => guestCounts.adults + guestCounts.children + guestCounts.babies,
@@ -240,6 +287,140 @@ export const SearchCompact = ({ variant = 'block', value, onSubmit }: SearchComp
     return !nextCheckInError && !nextCheckOutError && !nextRangeError;
   };
 
+  const parsedCheckIn = useMemo(() => parseDate(checkIn), [checkIn]);
+  const parsedCheckOut = useMemo(() => parseDate(checkOut), [checkOut]);
+
+  const isCheckInValid = Boolean(parsedCheckIn);
+  const isCheckOutEnabled = isCheckInValid;
+
+  const today = useMemo(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  }, []);
+
+  const ensureCalendarMonthVisible = (base: Date | null) => {
+    if (base) {
+      setCalendarMonth(startOfMonth(base));
+    } else {
+      setCalendarMonth(startOfMonth(new Date()));
+    }
+  };
+
+  const openCalendar = (target: 'checkin' | 'checkout') => {
+    setFocusedDateInput(target);
+    const baseDate =
+      target === 'checkin'
+        ? parsedCheckIn
+        : parsedCheckOut ?? parsedCheckIn;
+    ensureCalendarMonthVisible(baseDate ?? null);
+    setCalendarOpen(true);
+  };
+
+  const closeCalendar = () => {
+    setCalendarOpen(false);
+    setHoveredDate(null);
+  };
+
+  const handleManualCheckInChange = (value: string) => {
+    resetDateErrors();
+    const masked = maskDate(value);
+    setCheckIn(masked);
+
+    const nextDate = parseDate(masked);
+    if (nextDate) {
+      ensureCalendarMonthVisible(nextDate);
+    }
+
+    if (checkOut) {
+      setDateRangeError(validateDateRange(masked, checkOut));
+    }
+  };
+
+  const handleManualCheckOutChange = (value: string) => {
+    resetDateErrors();
+    const masked = maskDate(value);
+    setCheckOut(masked);
+
+    const nextDate = parseDate(masked);
+    if (nextDate) {
+      ensureCalendarMonthVisible(nextDate);
+    }
+
+    if (checkIn) {
+      setDateRangeError(validateDateRange(checkIn, masked));
+    }
+  };
+
+  const handleDateSelection = (selected: Date) => {
+    const formatted = format(selected, 'dd/MM/yyyy');
+
+    if (!parsedCheckIn || (parsedCheckIn && parsedCheckOut)) {
+      setCheckIn(formatted);
+      setCheckOut('');
+      setCheckInError(null);
+      setCheckOutError(null);
+      setDateRangeError(null);
+      setFocusedDateInput('checkout');
+      ensureCalendarMonthVisible(selected);
+      return;
+    }
+
+    if (isBefore(selected, parsedCheckIn)) {
+      setCheckIn(formatted);
+      setCheckOut('');
+      setCheckInError(null);
+      setCheckOutError(null);
+      setDateRangeError(null);
+      setFocusedDateInput('checkout');
+      ensureCalendarMonthVisible(selected);
+      return;
+    }
+
+    if (isSameDay(selected, parsedCheckIn)) {
+      return;
+    }
+
+    setCheckOut(format(selected, 'dd/MM/yyyy'));
+    setCheckOutError(null);
+    setDateRangeError(null);
+    setFocusedDateInput('checkout');
+    closeCalendar();
+  };
+
+  const calendarDays = useMemo(() => {
+    const start = startOfWeek(startOfMonth(calendarMonth));
+    const end = endOfMonth(calendarMonth);
+    const days: Date[] = [];
+    let current = start;
+
+    while (current <= end || days.length % 7 !== 0) {
+      days.push(current);
+      current = addDays(current, 1);
+    }
+
+    return days;
+  }, [calendarMonth]);
+
+  const isInRange = (day: Date) => {
+    if (parsedCheckIn && parsedCheckOut) {
+      return isWithinInterval(day, {
+        start: parsedCheckIn,
+        end: parsedCheckOut,
+      });
+    }
+
+    if (parsedCheckIn && hoveredDate && isAfter(hoveredDate, parsedCheckIn)) {
+      return isWithinInterval(day, {
+        start: parsedCheckIn,
+        end: hoveredDate,
+      });
+    }
+
+    return false;
+  };
+
+  const weekdayLabels = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -282,8 +463,7 @@ export const SearchCompact = ({ variant = 'block', value, onSubmit }: SearchComp
           />
         </div>
 
-        <div className="flex flex-col gap-1">
-          <span className={labelClassName}>Check-in — Check-out</span>
+        <div className="relative flex flex-col gap-1">
           <div className="flex gap-2">
             <div className="flex-1">
               <label htmlFor={`checkin-${variant}`} className="sr-only">
@@ -293,19 +473,29 @@ export const SearchCompact = ({ variant = 'block', value, onSubmit }: SearchComp
                 id={`checkin-${variant}`}
                 name="checkIn"
                 inputMode="numeric"
-                pattern="\\d{2}/\\d{2}/\\d{4}"
+                pattern={String.raw`\d{2}/\d{2}/\d{4}`}
                 placeholder="Check-in"
                 className={`${baseInput} ${checkInError ? errorInput : ''}`.trim()}
                 value={checkIn}
-                aria-describedby="hint-date"
+                aria-describedby={`hint-date-${variant}`}
                 aria-invalid={checkInError ? 'true' : undefined}
+                onFocus={() => openCalendar('checkin')}
+                onClick={() => openCalendar('checkin')}
                 onChange={(event) => {
-                  resetDateErrors();
-                  setCheckIn(maskDate(event.target.value));
+                  handleManualCheckInChange(event.target.value);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Tab') {
+                    closeCalendar();
+                  }
                 }}
                 onBlur={() => {
-                  setCheckInError(validateDate(checkIn));
-                  setDateRangeError(validateDateRange(checkIn, checkOut));
+                  setTimeout(() => {
+                    if (!calendarOpen) {
+                      setCheckInError(validateDate(checkIn));
+                      setDateRangeError(validateDateRange(checkIn, checkOut));
+                    }
+                  }, 0);
                 }}
               />
             </div>
@@ -317,30 +507,147 @@ export const SearchCompact = ({ variant = 'block', value, onSubmit }: SearchComp
                 id={`checkout-${variant}`}
                 name="checkOut"
                 inputMode="numeric"
-                pattern="\\d{2}/\\d{2}/\\d{4}"
+                pattern={String.raw`\d{2}/\d{2}/\d{4}`}
                 placeholder="Check-out"
-                className={`${baseInput} ${checkOutError ? errorInput : ''}`.trim()}
+                className={`${baseInput} ${
+                  checkOutError ? errorInput : ''
+                } ${
+                  isCheckOutEnabled ? '' : 'cursor-not-allowed bg-slate-100 text-slate-400'
+                }`.trim()}
                 value={checkOut}
                 aria-invalid={checkOutError ? 'true' : undefined}
+                aria-describedby={`hint-date-${variant}`}
+                aria-disabled={isCheckOutEnabled ? undefined : 'true'}
+                disabled={!isCheckOutEnabled}
+                onFocus={() => {
+                  if (isCheckOutEnabled) {
+                    openCalendar('checkout');
+                  }
+                }}
+                onClick={() => {
+                  if (isCheckOutEnabled) {
+                    openCalendar('checkout');
+                  }
+                }}
                 onChange={(event) => {
-                  resetDateErrors();
-                  setCheckOut(maskDate(event.target.value));
+                  if (!isCheckOutEnabled) {
+                    return;
+                  }
+
+                  handleManualCheckOutChange(event.target.value);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Tab') {
+                    closeCalendar();
+                  }
                 }}
                 onBlur={() => {
-                  setCheckOutError(validateDate(checkOut));
-                  setDateRangeError(validateDateRange(checkIn, checkOut));
+                  setTimeout(() => {
+                    if (!calendarOpen) {
+                      setCheckOutError(validateDate(checkOut));
+                      setDateRangeError(validateDateRange(checkIn, checkOut));
+                    }
+                  }, 0);
                 }}
               />
             </div>
           </div>
-          <small id="hint-date" className="sr-only">
+          <small id={`hint-date-${variant}`} className="sr-only">
             Formato esperado: dia/mês/ano, por exemplo 24/12/2025
           </small>
-          {(checkInError || checkOutError || dateRangeError) && (
-            <p className="text-sm text-red-600" role="status">
-              {checkInError || checkOutError || dateRangeError}
-            </p>
-          )}
+          <p
+            className={`min-h-[1.125rem] text-sm ${
+              checkInError || checkOutError || dateRangeError
+                ? 'text-red-600'
+                : 'text-transparent'
+            }`}
+            role={checkInError || checkOutError || dateRangeError ? 'status' : undefined}
+          >
+            {checkInError || checkOutError || dateRangeError || '\u00a0'}
+          </p>
+
+          {calendarOpen ? (
+            <div
+              ref={calendarRef}
+              className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-40 w-full rounded-xl border border-slate-200 bg-white p-4 shadow-lg md:w-[20rem] md:right-auto"
+            >
+              <div className="mb-3 flex items-center justify-between">
+                <button
+                  type="button"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-300 text-slate-700 hover:border-slate-400 hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-600"
+                  onClick={() => setCalendarMonth((prev) => addMonths(prev, -1))}
+                  aria-label="Mês anterior"
+                >
+                  ‹
+                </button>
+                <div className="text-sm font-semibold text-slate-900 capitalize">
+                  {new Intl.DateTimeFormat('pt-BR', {
+                    month: 'long',
+                    year: 'numeric',
+                  }).format(calendarMonth)}
+                </div>
+                <button
+                  type="button"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-300 text-slate-700 hover:border-slate-400 hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-600"
+                  onClick={() => setCalendarMonth((prev) => addMonths(prev, 1))}
+                  aria-label="Próximo mês"
+                >
+                  ›
+                </button>
+              </div>
+              <div className="grid grid-cols-7 gap-1 text-center text-xs font-medium text-slate-500">
+                {weekdayLabels.map((label) => (
+                  <div key={label}>{label}</div>
+                ))}
+              </div>
+              <div className="mt-1 grid grid-cols-7 gap-1 text-sm">
+                {calendarDays.map((day) => {
+                  const isCurrentMonth = day.getMonth() === calendarMonth.getMonth();
+                  const isSelectedStart = parsedCheckIn ? isSameDay(day, parsedCheckIn) : false;
+                  const isSelectedEnd = parsedCheckOut ? isSameDay(day, parsedCheckOut) : false;
+                  const inRange = isInRange(day);
+                  const isDisabled =
+                    (focusedDateInput === 'checkout' && parsedCheckIn && isBefore(day, parsedCheckIn)) ||
+                    isBefore(day, today);
+
+                  return (
+                    <button
+                      key={day.toISOString()}
+                      type="button"
+                      className={`relative flex h-9 w-9 items-center justify-center rounded-lg border border-transparent transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-600 ${
+                        isSelectedStart || isSelectedEnd
+                          ? 'bg-teal-600 text-white'
+                          : inRange
+                          ? 'bg-teal-50 text-teal-700'
+                          : isCurrentMonth
+                          ? 'text-slate-900 hover:border-teal-200 hover:bg-teal-50'
+                          : 'text-slate-400'
+                      } ${isDisabled ? 'cursor-not-allowed opacity-40 hover:bg-transparent' : ''}`.trim()}
+                      onClick={() => {
+                        if (isDisabled) {
+                          return;
+                        }
+                        handleDateSelection(day);
+                      }}
+                      onMouseEnter={() => {
+                        if (parsedCheckIn && !parsedCheckOut && !isBefore(day, parsedCheckIn)) {
+                          setHoveredDate(day);
+                        }
+                      }}
+                      onMouseLeave={() => {
+                        setHoveredDate(null);
+                      }}
+                      aria-pressed={isSelectedStart || isSelectedEnd}
+                      aria-label={format(day, 'dd/MM/yyyy')}
+                      disabled={isDisabled}
+                    >
+                      {day.getDate()}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
         </div>
 
         <div className="flex flex-col gap-1">
