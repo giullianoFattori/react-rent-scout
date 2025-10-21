@@ -1,11 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { EmptyState } from '../components/EmptyState';
 import { Header } from '../components/Header';
 import { PropertyCard, PropertyCardProps } from '../components/PropertyCard';
 import { SearchCompact, SearchCompactPayload } from '../components/SearchCompact';
-import { PropertyCardSkeleton } from '../components/Domain/Skeletons/Skeletons';
 import { FiltersBar, Filters, initialFilters } from '../components/FiltersBar';
+import ResultSkeleton from '../components/ResultSkeleton';
 
 type FilterableProperty = PropertyCardProps & {
   propertyType: 'Casa' | 'Apartamento' | 'Cabana' | 'Studio';
@@ -175,6 +175,7 @@ const mockResults: FilterableProperty[] = [
   },
 ];
 
+const PAGE_SIZE = 4;
 const skeletonPlaceholders = Array.from({ length: 8 }, (_, index) => index);
 
 const toPropertyCardProps = ({
@@ -198,11 +199,58 @@ export const Results = () => {
     ...initialFilters,
     amenities: {},
   }));
-  const isLoading = false;
+  const [isLoading, setIsLoading] = useState(true);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const hasInteracted = useRef(false);
+  const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const triggerLoading = useCallback(() => {
+    if (loadingTimeoutRef.current) {
+      clearTimeout(loadingTimeoutRef.current);
+    }
+
+    setIsLoading(true);
+    loadingTimeoutRef.current = setTimeout(() => {
+      setIsLoading(false);
+    }, 480);
+  }, []);
+
+  useEffect(() => {
+    triggerLoading();
+
+    return () => {
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+    };
+  }, [triggerLoading]);
+
+  useEffect(() => {
+    if (!hasInteracted.current) {
+      hasInteracted.current = true;
+      return;
+    }
+
+    triggerLoading();
+    setVisibleCount(PAGE_SIZE);
+  }, [filters, triggerLoading]);
 
   const handleSearch = (payload: SearchCompactPayload) => {
     setSearchSummary(payload);
     console.info('search_submit', payload);
+    triggerLoading();
+    setVisibleCount(PAGE_SIZE);
+  };
+
+  const handleResetFilters = () => {
+    setFilters({
+      ...initialFilters,
+      amenities: {},
+    });
+    setSearchSummary(undefined);
+    setVisibleCount(PAGE_SIZE);
+    triggerLoading();
+    console.info('filters_reset');
   };
 
   const filteredResults = useMemo(() => {
@@ -238,17 +286,32 @@ export const Results = () => {
     });
   }, [filters]);
 
+  const paginatedResults = useMemo(
+    () => filteredResults.slice(0, visibleCount),
+    [filteredResults, visibleCount]
+  );
+
   const totalLabel = useMemo(() => {
+    if (isLoading) {
+      return 'Carregando estadias disponíveis...';
+    }
+
     if (!filteredResults.length) {
       return 'Nenhum resultado disponível no momento';
     }
 
     if (filteredResults.length === 1) {
-      return '1 estadia encontrada';
+      return 'Exibindo 1 estadia';
     }
 
-    return `${filteredResults.length} estadias encontradas`;
-  }, [filteredResults.length]);
+    if (paginatedResults.length === filteredResults.length) {
+      return `${filteredResults.length} estadias encontradas`;
+    }
+
+    return `Exibindo ${paginatedResults.length} de ${filteredResults.length} estadias`;
+  }, [filteredResults.length, isLoading, paginatedResults.length]);
+
+  const hasMoreResults = !isLoading && paginatedResults.length < filteredResults.length;
 
   return (
     <div className="min-h-screen bg-neutral-bg text-neutral-text">
@@ -289,12 +352,12 @@ export const Results = () => {
             {isLoading ? (
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {skeletonPlaceholders.map((item) => (
-                  <PropertyCardSkeleton key={`skeleton-${item}`} />
+                  <ResultSkeleton key={`skeleton-${item}`} />
                 ))}
               </div>
-            ) : filteredResults.length > 0 ? (
+            ) : paginatedResults.length > 0 ? (
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {filteredResults.map((property) => {
+                {paginatedResults.map((property) => {
                   const cardProps = toPropertyCardProps(property);
 
                   return <PropertyCard key={property.title} {...cardProps} />;
@@ -305,11 +368,32 @@ export const Results = () => {
                 <EmptyState
                   title="Não encontramos acomodações"
                   description="Tente ajustar as datas, destino ou número de hóspedes para ver mais opções."
-                  ctaLabel="Limpar pesquisa"
-                  onCta={() => console.info('empty_state_reset')}
+                  ctaLabel="Limpar filtros"
+                  onCta={handleResetFilters}
                 />
+                <div className="mt-6 flex flex-col items-center gap-2 text-sm text-slate-500">
+                  <p>Você também pode explorar destaques na página inicial ou tentar outro destino.</p>
+                  <button
+                    type="button"
+                    onClick={() => console.info('empty_state_explore_home')}
+                    className="inline-flex items-center rounded-full border border-slate-200 px-4 py-2 font-medium text-slate-700 transition hover:border-slate-300 hover:text-slate-900 focus:outline-none focus-visible:ring focus-visible:ring-slate-400"
+                  >
+                    Ver sugestões populares
+                  </button>
+                </div>
               </div>
             )}
+            {hasMoreResults ? (
+              <div className="mt-8 flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => setVisibleCount((current) => Math.min(current + PAGE_SIZE, filteredResults.length))}
+                  className="inline-flex items-center rounded-full bg-slate-900 px-6 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus-visible:ring focus-visible:ring-slate-400"
+                >
+                  Carregar mais
+                </button>
+              </div>
+            ) : null}
           </div>
         </section>
       </main>
