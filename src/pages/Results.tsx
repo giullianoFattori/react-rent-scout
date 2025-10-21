@@ -212,7 +212,7 @@ export const Results = () => {
     setIsLoading(true);
     loadingTimeoutRef.current = setTimeout(() => {
       setIsLoading(false);
-    }, 480);
+    }, 400);
   }, []);
 
   useEffect(() => {
@@ -376,7 +376,7 @@ export const Results = () => {
                   <button
                     type="button"
                     onClick={() => console.info('empty_state_explore_home')}
-                    className="inline-flex items-center rounded-full border border-slate-200 px-4 py-2 font-medium text-slate-700 transition hover:border-slate-300 hover:text-slate-900 focus:outline-none focus-visible:ring focus-visible:ring-slate-400"
+                    className="inline-flex items-center rounded-full border border-slate-200 px-4 py-2 font-medium text-slate-700 transition hover:border-slate-300 hover:text-slate-900 focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
                   >
                     Ver sugestões populares
                   </button>
@@ -388,7 +388,7 @@ export const Results = () => {
                 <button
                   type="button"
                   onClick={() => setVisibleCount((current) => Math.min(current + PAGE_SIZE, filteredResults.length))}
-                  className="inline-flex items-center rounded-full bg-slate-900 px-6 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus-visible:ring focus-visible:ring-slate-400"
+                  className="inline-flex items-center rounded-full bg-slate-900 px-6 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
                 >
                   Carregar mais
                 </button>
