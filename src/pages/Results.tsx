@@ -5,8 +5,16 @@ import { Header } from '../components/Header';
 import { PropertyCard, PropertyCardProps } from '../components/PropertyCard';
 import { SearchCompact, SearchCompactPayload } from '../components/SearchCompact';
 import { PropertyCardSkeleton } from '../components/Domain/Skeletons/Skeletons';
+import { FiltersBar, Filters, initialFilters } from '../components/FiltersBar';
 
-const mockResults: PropertyCardProps[] = [
+type FilterableProperty = PropertyCardProps & {
+  propertyType: 'Casa' | 'Apartamento' | 'Cabana' | 'Studio';
+  amenities: { wifi?: boolean; cozinha?: boolean; estacionamento?: boolean };
+  petFriendly: boolean;
+  cancelation: 'flex' | 'mod' | 'rig';
+};
+
+const mockResults: FilterableProperty[] = [
   {
     title: 'Apartamento moderno no centro histórico',
     location: 'Lisboa, Portugal',
@@ -23,6 +31,10 @@ const mockResults: PropertyCardProps[] = [
       },
     ],
     badge: 'Destaque',
+    propertyType: 'Apartamento',
+    amenities: { wifi: true, cozinha: true },
+    petFriendly: false,
+    cancelation: 'flex',
   },
   {
     title: 'Casa pé na areia com deck privativo',
@@ -39,6 +51,10 @@ const mockResults: PropertyCardProps[] = [
         alt: 'Sala ampla com janelas panorâmicas',
       },
     ],
+    propertyType: 'Casa',
+    amenities: { wifi: true, estacionamento: true },
+    petFriendly: true,
+    cancelation: 'mod',
   },
   {
     title: 'Cabana minimalista cercada pela natureza',
@@ -55,6 +71,10 @@ const mockResults: PropertyCardProps[] = [
         alt: 'Sala aconchegante com lareira',
       },
     ],
+    propertyType: 'Cabana',
+    amenities: { estacionamento: true },
+    petFriendly: false,
+    cancelation: 'rig',
   },
   {
     title: 'Studio criativo com espaço de coworking',
@@ -68,6 +88,10 @@ const mockResults: PropertyCardProps[] = [
       },
     ],
     badge: 'Pet-friendly',
+    propertyType: 'Studio',
+    amenities: { wifi: true },
+    petFriendly: true,
+    cancelation: 'flex',
   },
   {
     title: 'Loft iluminado com varanda panorâmica',
@@ -84,6 +108,10 @@ const mockResults: PropertyCardProps[] = [
         alt: 'Cozinha planejada integrada à sala',
       },
     ],
+    propertyType: 'Apartamento',
+    amenities: { wifi: true, cozinha: true },
+    petFriendly: false,
+    cancelation: 'mod',
   },
   {
     title: 'Penthouse com rooftop e jacuzzi',
@@ -100,6 +128,10 @@ const mockResults: PropertyCardProps[] = [
         alt: 'Sala moderna minimalista com vista urbana',
       },
     ],
+    propertyType: 'Apartamento',
+    amenities: { wifi: true },
+    petFriendly: false,
+    cancelation: 'rig',
   },
   {
     title: 'Chalé sustentável com vista para o lago',
@@ -116,6 +148,10 @@ const mockResults: PropertyCardProps[] = [
         alt: 'Interior do chalé com decoração rústica',
       },
     ],
+    propertyType: 'Casa',
+    amenities: { cozinha: true, estacionamento: true },
+    petFriendly: true,
+    cancelation: 'flex',
   },
   {
     title: 'Villa mediterrânea para famílias grandes',
@@ -132,32 +168,87 @@ const mockResults: PropertyCardProps[] = [
         alt: 'Suíte principal com cama king',
       },
     ],
+    propertyType: 'Casa',
+    amenities: { wifi: true, cozinha: true, estacionamento: true },
+    petFriendly: true,
+    cancelation: 'mod',
   },
 ];
 
 const skeletonPlaceholders = Array.from({ length: 8 }, (_, index) => index);
 
+const toPropertyCardProps = ({
+  propertyType,
+  amenities,
+  petFriendly,
+  cancelation,
+  ...cardProps
+}: FilterableProperty): PropertyCardProps => {
+  void propertyType;
+  void amenities;
+  void petFriendly;
+  void cancelation;
+
+  return cardProps;
+};
+
 export const Results = () => {
   const [searchSummary, setSearchSummary] = useState<SearchCompactPayload>();
+  const [filters, setFilters] = useState<Filters>(() => ({
+    ...initialFilters,
+    amenities: {},
+  }));
   const isLoading = false;
-  const results = mockResults;
 
   const handleSearch = (payload: SearchCompactPayload) => {
     setSearchSummary(payload);
     console.info('search_submit', payload);
   };
 
+  const filteredResults = useMemo(() => {
+    return mockResults.filter((property) => {
+      if (filters.price) {
+        const [min, max] = filters.price;
+        if (property.pricePerNight < min || property.pricePerNight > max) {
+          return false;
+        }
+      }
+
+      if (filters.type && property.propertyType !== filters.type) {
+        return false;
+      }
+
+      const selectedAmenities = Object.entries(filters.amenities).filter(([, value]) => Boolean(value));
+      if (selectedAmenities.length > 0) {
+        const hasAllAmenities = selectedAmenities.every(([key]) => property.amenities[key as keyof typeof property.amenities]);
+        if (!hasAllAmenities) {
+          return false;
+        }
+      }
+
+      if (filters.petFriendly !== null && property.petFriendly !== filters.petFriendly) {
+        return false;
+      }
+
+      if (filters.cancelation && property.cancelation !== filters.cancelation) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [filters]);
+
   const totalLabel = useMemo(() => {
-    if (!results.length) {
+    if (!filteredResults.length) {
       return 'Nenhum resultado disponível no momento';
     }
 
-    if (results.length === 1) {
+    if (filteredResults.length === 1) {
       return '1 estadia encontrada';
     }
 
-    return `${results.length} estadias encontradas`;
-  }, [results.length]);
+    return `${filteredResults.length} estadias encontradas`;
+  }, [filteredResults.length]);
 
   return (
     <div className="min-h-screen bg-neutral-bg text-neutral-text">
@@ -174,6 +265,12 @@ export const Results = () => {
         <section className="mx-auto max-w-5xl px-4 md:px-6">
           <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm md:p-4">
             <SearchCompact onSubmit={handleSearch} value={searchSummary} />
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-7xl px-4 pt-6 md:px-6">
+          <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm md:p-4">
+            <FiltersBar filters={filters} onFiltersChange={setFilters} />
           </div>
         </section>
 
@@ -195,11 +292,13 @@ export const Results = () => {
                   <PropertyCardSkeleton key={`skeleton-${item}`} />
                 ))}
               </div>
-            ) : results.length > 0 ? (
+            ) : filteredResults.length > 0 ? (
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {results.map((property) => (
-                  <PropertyCard key={property.title} {...property} />
-                ))}
+                {filteredResults.map((property) => {
+                  const cardProps = toPropertyCardProps(property);
+
+                  return <PropertyCard key={property.title} {...cardProps} />;
+                })}
               </div>
             ) : (
               <div className="py-10">
