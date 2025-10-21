@@ -10,14 +10,17 @@ import ResultSkeleton from '../components/ResultSkeleton';
 import SortBar, { type SortKey } from '../components/SortBar';
 
 type FilterableProperty = PropertyCardProps & {
+  id: string;
   propertyType: 'Casa' | 'Apartamento' | 'Cabana' | 'Studio';
   amenities: { wifi?: boolean; cozinha?: boolean; estacionamento?: boolean };
   petFriendly: boolean;
   cancelation: 'flex' | 'mod' | 'rig';
+  mapPosition: { top: number; left: number };
 };
 
 const mockResults: FilterableProperty[] = [
   {
+    id: 'lisboa-apartamento-moderno',
     title: 'Apartamento moderno no centro histórico',
     location: 'Lisboa, Portugal',
     rating: 4.8,
@@ -37,8 +40,10 @@ const mockResults: FilterableProperty[] = [
     amenities: { wifi: true, cozinha: true },
     petFriendly: false,
     cancelation: 'flex',
+    mapPosition: { top: 32, left: 48 },
   },
   {
+    id: 'florianopolis-casa-deck-privativo',
     title: 'Casa pé na areia com deck privativo',
     location: 'Florianópolis, Brasil',
     rating: 4.9,
@@ -57,8 +62,10 @@ const mockResults: FilterableProperty[] = [
     amenities: { wifi: true, estacionamento: true },
     petFriendly: true,
     cancelation: 'mod',
+    mapPosition: { top: 68, left: 56 },
   },
   {
+    id: 'campos-jordao-cabana-minimalista',
     title: 'Cabana minimalista cercada pela natureza',
     location: 'Campos do Jordão, Brasil',
     rating: 4.7,
@@ -77,8 +84,10 @@ const mockResults: FilterableProperty[] = [
     amenities: { estacionamento: true },
     petFriendly: false,
     cancelation: 'rig',
+    mapPosition: { top: 58, left: 38 },
   },
   {
+    id: 'curitiba-studio-criativo',
     title: 'Studio criativo com espaço de coworking',
     location: 'Curitiba, Brasil',
     rating: 4.6,
@@ -94,8 +103,10 @@ const mockResults: FilterableProperty[] = [
     amenities: { wifi: true },
     petFriendly: true,
     cancelation: 'flex',
+    mapPosition: { top: 52, left: 44 },
   },
   {
+    id: 'sao-paulo-loft-panorama',
     title: 'Loft iluminado com varanda panorâmica',
     location: 'São Paulo, Brasil',
     rating: 4.8,
@@ -114,8 +125,10 @@ const mockResults: FilterableProperty[] = [
     amenities: { wifi: true, cozinha: true },
     petFriendly: false,
     cancelation: 'mod',
+    mapPosition: { top: 46, left: 42 },
   },
   {
+    id: 'buenos-aires-penthouse-rooftop',
     title: 'Penthouse com rooftop e jacuzzi',
     location: 'Buenos Aires, Argentina',
     rating: 5,
@@ -134,8 +147,10 @@ const mockResults: FilterableProperty[] = [
     amenities: { wifi: true },
     petFriendly: false,
     cancelation: 'rig',
+    mapPosition: { top: 58, left: 28 },
   },
   {
+    id: 'gramado-chale-sustentavel',
     title: 'Chalé sustentável com vista para o lago',
     location: 'Gramado, Brasil',
     rating: 4.8,
@@ -154,8 +169,10 @@ const mockResults: FilterableProperty[] = [
     amenities: { cozinha: true, estacionamento: true },
     petFriendly: true,
     cancelation: 'flex',
+    mapPosition: { top: 40, left: 35 },
   },
   {
+    id: 'porto-villa-mediterranea',
     title: 'Villa mediterrânea para famílias grandes',
     location: 'Porto, Portugal',
     rating: 4.9,
@@ -174,6 +191,7 @@ const mockResults: FilterableProperty[] = [
     amenities: { wifi: true, cozinha: true, estacionamento: true },
     petFriendly: true,
     cancelation: 'mod',
+    mapPosition: { top: 24, left: 36 },
   },
 ];
 
@@ -183,17 +201,55 @@ const skeletonPlaceholders = Array.from({ length: 8 }, (_, index) => index);
 const isSortKey = (value: string | null): value is SortKey =>
   value === 'default' || value === 'price_asc' || value === 'price_desc' || value === 'rating_desc';
 
+const mapPanelBaseClasses =
+  'relative h-full w-full overflow-hidden rounded-[inherit] bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300';
+
+type MapPreviewProps = {
+  results: FilterableProperty[];
+  onMarkerClick: (propertyId: string) => void;
+};
+
+const MapPreview = ({ results, onMarkerClick }: MapPreviewProps) => {
+  return (
+    <div role="img" aria-label="Mapa com propriedades filtradas" className={mapPanelBaseClasses}>
+      <div
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(15,118,110,0.12),_transparent_55%)]"
+        aria-hidden="true"
+      />
+      {results.map((property) => (
+        <button
+          key={property.id}
+          type="button"
+          aria-label={`Ver ${property.title} na lista`}
+          onClick={() => onMarkerClick(property.id)}
+          style={{ top: `${property.mapPosition.top}%`, left: `${property.mapPosition.left}%` }}
+          className="absolute flex h-6 w-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-teal-500 text-white shadow-sm ring-2 ring-white transition-transform duration-150 hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/70"
+        >
+          <span className="block h-2.5 w-2.5 rounded-full bg-white" aria-hidden="true" />
+        </button>
+      ))}
+      <div className="absolute bottom-4 left-4 rounded-lg bg-white/90 px-3 py-2 text-sm font-medium text-teal-700 shadow-sm ring-1 ring-black/5">
+        Visualização de mapa (mock)
+      </div>
+    </div>
+  );
+};
+
 const toPropertyCardProps = ({
   propertyType,
   amenities,
   petFriendly,
   cancelation,
+  mapPosition,
+  id,
   ...cardProps
 }: FilterableProperty): PropertyCardProps => {
   void propertyType;
   void amenities;
   void petFriendly;
   void cancelation;
+  void mapPosition;
+  void id;
 
   return cardProps;
 };
@@ -211,6 +267,8 @@ export const Results = () => {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [showMap, setShowMap] = useState(false);
+  const [splitOnDesktop, setSplitOnDesktop] = useState(true);
   const hasInteracted = useRef(false);
   const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -234,6 +292,61 @@ export const Results = () => {
       }
     };
   }, [triggerLoading]);
+
+  useEffect(() => {
+    if (!showMap) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowMap(false);
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+
+    let previousOverflow: string | undefined;
+    if (typeof document !== 'undefined') {
+      previousOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('keydown', handleKeyDown);
+      }
+
+      if (typeof document !== 'undefined') {
+        if (previousOverflow && previousOverflow.length > 0) {
+          document.body.style.overflow = previousOverflow;
+        } else {
+          document.body.style.removeProperty('overflow');
+        }
+      }
+    };
+  }, [showMap]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const mediaQuery = window.matchMedia('(min-width: 1024px)');
+    const handleChange = (event: MediaQueryListEvent) => {
+      if (event.matches) {
+        setShowMap(false);
+      }
+    };
+
+    mediaQuery.addEventListener('change', handleChange);
+
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange);
+    };
+  }, []);
 
   useEffect(() => {
     const param = searchParams.get('sort');
@@ -358,6 +471,27 @@ export const Results = () => {
     [sortedResults, visibleCount]
   );
 
+  const handleMarkerClick = useCallback((propertyId: string) => {
+    if (typeof document === 'undefined') {
+      return;
+    }
+
+    const target = document.querySelector<HTMLElement>(`[data-card-id="${propertyId}"]`);
+    const surface = target?.querySelector<HTMLElement>('[data-interactive-surface]');
+
+    if (surface) {
+      surface.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    target?.focus({ preventScroll: true });
+
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setShowMap(false);
+    }
+  }, []);
+
   const totalLabel = useMemo(() => {
     if (isLoading) {
       return 'Carregando estadias disponíveis...';
@@ -379,6 +513,12 @@ export const Results = () => {
   }, [filteredResults.length, isLoading, paginatedResults.length]);
 
   const hasMoreResults = !isLoading && paginatedResults.length < sortedResults.length;
+  const canDisplayMap = sortedResults.length > 0;
+  const toggleButtonBaseClasses =
+    'inline-flex h-9 items-center justify-center rounded-lg border px-3 text-sm font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600';
+  const toggleButtonActiveClasses = 'border-teal-500 bg-teal-50 text-teal-700 shadow-sm';
+  const toggleButtonInactiveClasses =
+    'border-slate-300 text-slate-600 hover:border-slate-400 hover:text-slate-900';
 
   return (
     <div className="min-h-screen bg-neutral-bg text-neutral-text">
@@ -411,67 +551,152 @@ export const Results = () => {
         </section>
 
         <section className="mx-auto max-w-7xl px-4 pb-6 pt-6 md:px-6">
-          <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
               <h2 className="text-xl font-semibold text-slate-900 md:text-2xl">Estadias recomendadas</h2>
               <p className="text-sm text-slate-600">{totalLabel}</p>
             </div>
-            <div className="text-xs uppercase tracking-wide text-slate-500">
-              Resultados simulados
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="text-xs uppercase tracking-wide text-slate-500">Resultados simulados</div>
+              {canDisplayMap ? (
+                <>
+                  <div className="flex gap-2 lg:hidden">
+                    <button
+                      type="button"
+                      onClick={() => setShowMap(true)}
+                      className={`${toggleButtonBaseClasses} ${toggleButtonActiveClasses}`}
+                    >
+                      Ver mapa
+                    </button>
+                  </div>
+                  <div className="hidden gap-2 lg:flex">
+                    <button
+                      type="button"
+                      aria-pressed={!splitOnDesktop}
+                      onClick={() => setSplitOnDesktop(false)}
+                      className={`${toggleButtonBaseClasses} ${!splitOnDesktop ? toggleButtonActiveClasses : toggleButtonInactiveClasses}`}
+                    >
+                      Lista
+                    </button>
+                    <button
+                      type="button"
+                      aria-pressed={splitOnDesktop}
+                      onClick={() => setSplitOnDesktop(true)}
+                      className={`${toggleButtonBaseClasses} ${splitOnDesktop ? toggleButtonActiveClasses : toggleButtonInactiveClasses}`}
+                    >
+                      Lista + mapa
+                    </button>
+                  </div>
+                </>
+              ) : null}
             </div>
           </div>
 
-          <div className="mt-6">
-            {isLoading ? (
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {skeletonPlaceholders.map((item) => (
-                  <ResultSkeleton key={`skeleton-${item}`} />
-                ))}
-              </div>
-            ) : paginatedResults.length > 0 ? (
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {paginatedResults.map((property) => {
-                  const cardProps = toPropertyCardProps(property);
+          <div
+            className={`mt-6 ${
+              splitOnDesktop && canDisplayMap ? 'lg:grid lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:items-start lg:gap-6' : ''
+            }`}
+          >
+            <div>
+              {isLoading ? (
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {skeletonPlaceholders.map((item) => (
+                    <ResultSkeleton key={`skeleton-${item}`} />
+                  ))}
+                </div>
+              ) : paginatedResults.length > 0 ? (
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {paginatedResults.map((property) => {
+                    const cardProps = toPropertyCardProps(property);
 
-                  return <PropertyCard key={property.title} {...cardProps} />;
-                })}
-              </div>
-            ) : (
-              <div className="py-10">
-                <EmptyState
-                  title="Não encontramos acomodações"
-                  description="Tente ajustar as datas, destino ou número de hóspedes para ver mais opções."
-                  ctaLabel="Limpar filtros"
-                  onCta={handleResetFilters}
-                />
-                <div className="mt-6 flex flex-col items-center gap-2 text-sm text-slate-500">
-                  <p>Você também pode explorar destaques na página inicial ou tentar outro destino.</p>
+                    return (
+                      <div
+                        key={property.id}
+                        data-card-id={property.id}
+                        tabIndex={-1}
+                        className="focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
+                      >
+                        <PropertyCard {...cardProps} />
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="py-10">
+                  <EmptyState
+                    title="Não encontramos acomodações"
+                    description="Tente ajustar as datas, destino ou número de hóspedes para ver mais opções."
+                    ctaLabel="Limpar filtros"
+                    onCta={handleResetFilters}
+                  />
+                  <div className="mt-6 flex flex-col items-center gap-2 text-sm text-slate-500">
+                    <p>Você também pode explorar destaques na página inicial ou tentar outro destino.</p>
+                    <button
+                      type="button"
+                      onClick={() => console.info('empty_state_explore_home')}
+                      className="inline-flex items-center rounded-full border border-slate-200 px-4 py-2 font-medium text-slate-700 transition hover:border-slate-300 hover:text-slate-900 focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
+                    >
+                      Ver sugestões populares
+                    </button>
+                  </div>
+                </div>
+              )}
+              {hasMoreResults ? (
+                <div className="mt-8 flex justify-center">
                   <button
                     type="button"
-                    onClick={() => console.info('empty_state_explore_home')}
-                    className="inline-flex items-center rounded-full border border-slate-200 px-4 py-2 font-medium text-slate-700 transition hover:border-slate-300 hover:text-slate-900 focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
+                    onClick={() =>
+                      setVisibleCount((current) => Math.min(current + PAGE_SIZE, sortedResults.length))
+                    }
+                    className="inline-flex items-center rounded-full bg-slate-900 px-6 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
                   >
-                    Ver sugestões populares
+                    Carregar mais
                   </button>
                 </div>
-              </div>
-            )}
-            {hasMoreResults ? (
-              <div className="mt-8 flex justify-center">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setVisibleCount((current) => Math.min(current + PAGE_SIZE, sortedResults.length))
-                  }
-                  className="inline-flex items-center rounded-full bg-slate-900 px-6 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
-                >
-                  Carregar mais
-                </button>
-              </div>
+              ) : null}
+            </div>
+            {splitOnDesktop && canDisplayMap ? (
+              <aside className="hidden lg:block">
+                <div className="sticky top-24 h-[70vh] rounded-xl border border-slate-200 bg-white shadow-sm">
+                  <MapPreview results={sortedResults} onMarkerClick={handleMarkerClick} />
+                </div>
+              </aside>
             ) : null}
           </div>
         </section>
       </main>
+      {showMap && canDisplayMap ? (
+        <div
+          className="fixed inset-0 z-50 flex flex-col bg-white lg:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Mapa das acomodações"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              setShowMap(false);
+            }
+          }}
+        >
+          <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+            <div>
+              <p className="text-sm font-medium uppercase tracking-wide text-teal-700">Explorar</p>
+              <h2 className="text-lg font-semibold text-slate-900">Mapa das acomodações</h2>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowMap(false)}
+              className={`${toggleButtonBaseClasses} ${toggleButtonInactiveClasses}`}
+            >
+              Fechar
+            </button>
+          </div>
+          <div className="flex-1 px-4 pb-6 pt-4">
+            <div className="h-full rounded-xl border border-slate-200 bg-white shadow-sm">
+              <MapPreview results={sortedResults} onMarkerClick={handleMarkerClick} />
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 };
