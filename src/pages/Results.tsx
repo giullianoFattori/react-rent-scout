@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 import { EmptyState } from '../components/EmptyState';
 import { Header } from '../components/Header';
@@ -6,6 +7,7 @@ import { PropertyCard, PropertyCardProps } from '../components/PropertyCard';
 import { SearchCompact, SearchCompactPayload } from '../components/SearchCompact';
 import { FiltersBar, Filters, initialFilters } from '../components/FiltersBar';
 import ResultSkeleton from '../components/ResultSkeleton';
+import SortBar, { type SortKey } from '../components/SortBar';
 
 type FilterableProperty = PropertyCardProps & {
   propertyType: 'Casa' | 'Apartamento' | 'Cabana' | 'Studio';
@@ -178,6 +180,9 @@ const mockResults: FilterableProperty[] = [
 const PAGE_SIZE = 4;
 const skeletonPlaceholders = Array.from({ length: 8 }, (_, index) => index);
 
+const isSortKey = (value: string | null): value is SortKey =>
+  value === 'default' || value === 'price_asc' || value === 'price_desc' || value === 'rating_desc';
+
 const toPropertyCardProps = ({
   propertyType,
   amenities,
@@ -194,11 +199,16 @@ const toPropertyCardProps = ({
 };
 
 export const Results = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchSummary, setSearchSummary] = useState<SearchCompactPayload>();
   const [filters, setFilters] = useState<Filters>(() => ({
     ...initialFilters,
     amenities: {},
   }));
+  const [sortKey, setSortKey] = useState<SortKey>(() => {
+    const param = searchParams.get('sort');
+    return isSortKey(param) ? param : 'default';
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const hasInteracted = useRef(false);
@@ -224,6 +234,13 @@ export const Results = () => {
       }
     };
   }, [triggerLoading]);
+
+  useEffect(() => {
+    const param = searchParams.get('sort');
+    const nextSort = isSortKey(param) ? param : 'default';
+
+    setSortKey((current) => (current === nextSort ? current : nextSort));
+  }, [searchParams]);
 
   useEffect(() => {
     if (!hasInteracted.current) {
@@ -252,6 +269,33 @@ export const Results = () => {
     triggerLoading();
     console.info('filters_reset');
   };
+
+  const handleSortChange = useCallback(
+    (nextSort: SortKey) => {
+      setSortKey((current) => (current === nextSort ? current : nextSort));
+      setSearchParams((prev) => {
+        const params = new URLSearchParams(prev);
+        const currentParam = params.get('sort');
+
+        if (nextSort === 'default') {
+          if (currentParam === null) {
+            return prev;
+          }
+
+          params.delete('sort');
+          return params;
+        }
+
+        if (currentParam === nextSort) {
+          return prev;
+        }
+
+        params.set('sort', nextSort);
+        return params;
+      });
+    },
+    [setSearchParams]
+  );
 
   const filteredResults = useMemo(() => {
     return mockResults.filter((property) => {
@@ -285,10 +329,33 @@ export const Results = () => {
       return true;
     });
   }, [filters]);
+  const sortedResults = useMemo(() => {
+    if (sortKey === 'default') {
+      return filteredResults;
+    }
+
+    const nextResults = [...filteredResults];
+
+    switch (sortKey) {
+      case 'price_asc':
+        nextResults.sort((a, b) => a.pricePerNight - b.pricePerNight);
+        break;
+      case 'price_desc':
+        nextResults.sort((a, b) => b.pricePerNight - a.pricePerNight);
+        break;
+      case 'rating_desc':
+        nextResults.sort((a, b) => b.rating - a.rating);
+        break;
+      default:
+        break;
+    }
+
+    return nextResults;
+  }, [filteredResults, sortKey]);
 
   const paginatedResults = useMemo(
-    () => filteredResults.slice(0, visibleCount),
-    [filteredResults, visibleCount]
+    () => sortedResults.slice(0, visibleCount),
+    [sortedResults, visibleCount]
   );
 
   const totalLabel = useMemo(() => {
@@ -311,7 +378,7 @@ export const Results = () => {
     return `Exibindo ${paginatedResults.length} de ${filteredResults.length} estadias`;
   }, [filteredResults.length, isLoading, paginatedResults.length]);
 
-  const hasMoreResults = !isLoading && paginatedResults.length < filteredResults.length;
+  const hasMoreResults = !isLoading && paginatedResults.length < sortedResults.length;
 
   return (
     <div className="min-h-screen bg-neutral-bg text-neutral-text">
@@ -334,6 +401,12 @@ export const Results = () => {
         <section className="mx-auto max-w-7xl px-4 pt-6 md:px-6">
           <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm md:p-4">
             <FiltersBar filters={filters} onFiltersChange={setFilters} />
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-7xl px-4 md:px-6">
+          <div className="rounded-xl border border-slate-200 bg-white px-3 shadow-sm md:px-4">
+            <SortBar value={sortKey} onChange={handleSortChange} />
           </div>
         </section>
 
@@ -387,7 +460,9 @@ export const Results = () => {
               <div className="mt-8 flex justify-center">
                 <button
                   type="button"
-                  onClick={() => setVisibleCount((current) => Math.min(current + PAGE_SIZE, filteredResults.length))}
+                  onClick={() =>
+                    setVisibleCount((current) => Math.min(current + PAGE_SIZE, sortedResults.length))
+                  }
                   className="inline-flex items-center rounded-full bg-slate-900 px-6 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
                 >
                   Carregar mais
