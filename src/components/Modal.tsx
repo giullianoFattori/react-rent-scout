@@ -79,7 +79,7 @@ export const Modal = ({
             type="button"
             onClick={onClose}
             className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus-visible:ring focus-visible:ring-slate-400"
-            aria-label="Fechar filtros"
+            aria-label="Fechar modal"
           >
             <span aria-hidden="true">×</span>
           </button>
