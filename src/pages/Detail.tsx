@@ -1,8 +1,12 @@
+import { useState } from 'react';
 import { Header } from '../components/Header';
+import AmenityDrawer from '../components/AmenityDrawer';
 import AmenitiesPreview from '../components/AmenitiesPreview';
 import BookingWidget from '../components/BookingWidget';
 import GalleryGrid from '../components/GalleryGrid';
+import Policies from '../components/Policies';
 import Reviews from '../components/Reviews';
+import type { AmenityCategory, Policies as PoliciesType } from '../components/Amenities.types';
 
 type Stay = {
   id: number;
@@ -59,6 +63,80 @@ const stay: Stay = {
   coords: { lat: -22.971177, lng: -43.182543 },
 };
 
+const amenityCategories: AmenityCategory[] = [
+  {
+    id: 'basic',
+    name: 'Básico',
+    items: [
+      { key: 'wifi', label: 'Wi-Fi veloz', available: true },
+      { key: 'ac', label: 'Ar-condicionado', available: true },
+      { key: 'heating', label: 'Aquecimento central', available: false },
+      { key: 'tv', label: 'Smart TV com streaming', available: true },
+    ],
+  },
+  {
+    id: 'kitchen',
+    name: 'Cozinha',
+    items: [
+      { key: 'kitchen', label: 'Cozinha completa', available: true },
+      { key: 'stove', label: 'Fogão', available: true },
+      { key: 'oven', label: 'Forno', available: true },
+      { key: 'dishwasher', label: 'Lava-louças', available: false },
+    ],
+  },
+  {
+    id: 'workspace',
+    name: 'Área de trabalho',
+    items: [
+      { key: 'desk', label: 'Mesa dedicada', available: true },
+      { key: 'monitor', label: 'Monitor extra', available: false },
+    ],
+  },
+  {
+    id: 'safety',
+    name: 'Segurança',
+    items: [
+      { key: 'camera', label: 'Câmeras de segurança externas', available: true },
+      { key: 'alarm', label: 'Sistema de alarme', available: false },
+      { key: 'extinguisher', label: 'Extintor de incêndio', available: true },
+    ],
+  },
+  {
+    id: 'accessibility',
+    name: 'Acessibilidade',
+    items: [
+      { key: 'elevator', label: 'Elevador', available: true },
+      { key: 'step-free', label: 'Acesso sem degraus', available: false },
+    ],
+  },
+  {
+    id: 'parking',
+    name: 'Estacionamento',
+    items: [
+      { key: 'garage', label: 'Vaga na garagem', available: true },
+      { key: 'street', label: 'Estacionamento na rua', available: true },
+    ],
+  },
+  {
+    id: 'pets',
+    name: 'Pet-friendly',
+    items: [
+      { key: 'pets', label: 'Pets permitidos', available: true },
+      { key: 'pet-fee', label: 'Taxa para pets', available: false },
+    ],
+  },
+];
+
+const policies: PoliciesType = {
+  checkin: 'Após 15:00',
+  checkout: 'Até 11:00',
+  smoking: false,
+  parties: false,
+  quietHours: '22:00–08:00',
+  pets: 'sob consulta',
+  cancelation: 'Gratuito até 5 dias antes',
+};
+
 const ActionButton = ({ children }: { children: string }) => (
   <button
     type="button"
@@ -69,11 +147,13 @@ const ActionButton = ({ children }: { children: string }) => (
 );
 
 const Detail = () => {
+  const [openAmenities, setOpenAmenities] = useState(false);
+
   return (
     <div className="min-h-screen bg-neutral-bg text-neutral-text">
       <Header />
 
-      <section className="max-w-7xl mx-auto px-4 md:px-6 py-4">
+      <section className="max-w-7xl mx-auto px-4 py-4 md:px-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
             <h1 className="text-2xl font-semibold text-slate-900 md:text-3xl">{stay.title}</h1>
@@ -113,7 +193,7 @@ const Detail = () => {
             <span>{stay.baths} banheiros</span>
           </div>
 
-          <AmenitiesPreview items={stay.amenities} />
+          <AmenitiesPreview items={stay.amenities} onViewAll={() => setOpenAmenities(true)} />
 
           <article className="prose prose-slate max-w-none text-slate-700">
             {stay.description.split('\n\n').map((paragraph, index) => (
@@ -121,24 +201,23 @@ const Detail = () => {
             ))}
           </article>
 
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <section aria-labelledby="house-rules-heading">
-              <h2 id="house-rules-heading" className="text-lg font-semibold text-slate-900">
-                Regras da casa
-              </h2>
-              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700">
-                {stay.rules.map((rule) => (
-                  <li key={rule}>{rule}</li>
-                ))}
-              </ul>
-            </section>
-            <section aria-labelledby="cancelation-heading">
-              <h2 id="cancelation-heading" className="text-lg font-semibold text-slate-900">
-                Cancelamento
-              </h2>
-              <p className="mt-2 text-sm text-slate-700">{stay.cancelation}</p>
-            </section>
-          </div>
+          <section aria-labelledby="policies-heading">
+            <h2 id="policies-heading" className="sr-only">
+              Políticas e regras
+            </h2>
+            <Policies p={policies} />
+          </section>
+
+          <section aria-labelledby="house-rules-heading">
+            <h2 id="house-rules-heading" className="text-lg font-semibold text-slate-900">
+              Regras adicionais da casa
+            </h2>
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700">
+              {stay.rules.map((rule) => (
+                <li key={rule}>{rule}</li>
+              ))}
+            </ul>
+          </section>
 
           <section
             aria-label={`Mapa próximo a ${stay.location}`}
@@ -168,6 +247,8 @@ const Detail = () => {
           />
         </aside>
       </section>
+
+      <AmenityDrawer open={openAmenities} onClose={() => setOpenAmenities(false)} cats={amenityCategories} />
     </div>
   );
 };

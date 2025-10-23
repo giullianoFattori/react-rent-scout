@@ -1,9 +1,11 @@
 interface AmenitiesPreviewProps {
   items: string[];
+  onViewAll?: () => void;
 }
 
-export const AmenitiesPreview = ({ items }: AmenitiesPreviewProps) => {
+export const AmenitiesPreview = ({ items, onViewAll }: AmenitiesPreviewProps) => {
   const visibleAmenities = items.slice(0, 6);
+  const hasMore = items.length > visibleAmenities.length;
 
   return (
     <section aria-labelledby="amenities-heading">
@@ -18,9 +20,10 @@ export const AmenitiesPreview = ({ items }: AmenitiesPreviewProps) => {
           </li>
         ))}
       </ul>
-      {items.length > visibleAmenities.length ? (
+      {hasMore && onViewAll ? (
         <button
           type="button"
+          onClick={onViewAll}
           className="mt-3 h-9 rounded-lg border border-slate-300 px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-600"
         >
           Ver todas as comodidades
