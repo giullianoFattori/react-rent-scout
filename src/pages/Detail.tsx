@@ -161,6 +161,10 @@ const Detail = () => {
             pricePerNight={stay.pricePerNight}
             rating={stay.rating}
             reviewsCount={stay.reviewsCount}
+            minNights={2}
+            cleaningFee={80}
+            serviceFeeRate={0.12}
+            blockedDates={['24/12/2025', '25/12/2025', '31/12/2025', '01/01/2026']}
           />
         </aside>
       </section>

@@ -1,60 +1,97 @@
 import { useMemo, useState } from 'react';
+import { diffDays, fmtBRL, isBlocked, maskDate, parseDMY } from '../utils/datePrice';
 
-interface BookingWidgetProps {
+type BookingWidgetProps = {
   pricePerNight: number;
   rating: number;
   reviewsCount: number;
-}
+  minNights?: number;
+  cleaningFee?: number;
+  serviceFeeRate?: number;
+  blockedDates?: string[];
+};
 
-export const BookingWidget = ({ pricePerNight, rating, reviewsCount }: BookingWidgetProps) => {
+const inputBase =
+  'h-11 w-full rounded-lg border border-slate-300 px-3 text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-teal-600 focus:border-teal-600';
+const btnPrimary =
+  'h-11 w-full rounded-lg bg-teal-600 text-white hover:bg-teal-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-600';
+const helpText = 'mt-1 text-sm';
+
+const BookingWidget = ({
+  pricePerNight,
+  rating,
+  reviewsCount,
+  minNights = 1,
+  cleaningFee = 80,
+  serviceFeeRate = 0.12,
+  blockedDates = [],
+}: BookingWidgetProps) => {
   const [checkin, setCheckin] = useState('');
   const [checkout, setCheckout] = useState('');
   const [guests, setGuests] = useState(2);
 
+  const parsedCheckin = useMemo(() => parseDMY(checkin), [checkin]);
+  const parsedCheckout = useMemo(() => parseDMY(checkout), [checkout]);
   const nights = useMemo(() => {
-    if (!checkin || !checkout) {
-      return 1;
+    if (!parsedCheckin || !parsedCheckout) {
+      return 0;
     }
 
-    const [checkinDay, checkinMonth, checkinYear] = checkin.split('/').map(Number);
-    const [checkoutDay, checkoutMonth, checkoutYear] = checkout.split('/').map(Number);
+    return Math.max(0, diffDays(parsedCheckin, parsedCheckout));
+  }, [parsedCheckin, parsedCheckout]);
 
-    if (
-      Number.isNaN(checkinDay) ||
-      Number.isNaN(checkinMonth) ||
-      Number.isNaN(checkinYear) ||
-      Number.isNaN(checkoutDay) ||
-      Number.isNaN(checkoutMonth) ||
-      Number.isNaN(checkoutYear)
-    ) {
-      return 1;
+  const errors: Record<'checkin' | 'checkout', string | undefined> = {
+    checkin: undefined,
+    checkout: undefined,
+  };
+
+  if (checkin && !parsedCheckin) {
+    errors.checkin = 'Digite uma data válida (dd/mm/aaaa).';
+  } else if (checkin && isBlocked(checkin, blockedDates)) {
+    errors.checkin = 'Data indisponível.';
+  }
+
+  if (checkout && !parsedCheckout) {
+    errors.checkout = 'Digite uma data válida (dd/mm/aaaa).';
+  } else if (checkout && isBlocked(checkout, blockedDates)) {
+    errors.checkout = 'Data indisponível.';
+  }
+
+  if (!errors.checkin && !errors.checkout && parsedCheckin && parsedCheckout) {
+    if (nights <= 0) {
+      errors.checkout = 'A data de saída deve ser após a de entrada.';
+    } else if (nights < minNights) {
+      errors.checkout = `Mínimo de ${minNights} ${minNights > 1 ? 'noites' : 'noite'}.`;
     }
+  }
 
-    const checkinDate = new Date(checkinYear, checkinMonth - 1, checkinDay);
-    const checkoutDate = new Date(checkoutYear, checkoutMonth - 1, checkoutDay);
-    const diff = checkoutDate.getTime() - checkinDate.getTime();
-    const totalNights = Math.round(diff / (1000 * 60 * 60 * 24));
+  const subtotal = nights * pricePerNight;
+  const serviceFee = Math.round(subtotal * serviceFeeRate);
+  const cleaning = nights > 0 ? cleaningFee : 0;
+  const total = subtotal + serviceFee + cleaning;
 
-    return Number.isFinite(totalNights) && totalNights > 0 ? totalNights : 1;
-  }, [checkin, checkout]);
+  const canBook = Boolean(
+    parsedCheckin &&
+      parsedCheckout &&
+      nights >= minNights &&
+      !errors.checkin &&
+      !errors.checkout,
+  );
 
-  const subtotal = pricePerNight * nights;
-  const fee = Math.round(subtotal * 0.12);
-  const total = subtotal + fee;
-
-  const baseInputClassName =
-    'h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 placeholder-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-600';
+  const statusMessage =
+    (checkin && isBlocked(checkin, blockedDates)) ||
+    (checkout && isBlocked(checkout, blockedDates))
+      ? 'Algumas datas selecionadas estão indisponíveis.'
+      : undefined;
 
   return (
     <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4 md:p-5">
       <div className="flex items-baseline justify-between">
         <div className="text-slate-900">
-          <span className="text-xl font-semibold">R$ {pricePerNight}</span>{' '}
-          <span className="text-sm text-slate-600">/ noite</span>
+          <span className="text-xl font-semibold">{fmtBRL(pricePerNight)}</span>
+          <span className="text-sm text-slate-600"> / noite</span>
         </div>
-        <div className="text-sm text-slate-600">
-          ★ {rating.toFixed(2)} · {reviewsCount} avaliações
-        </div>
+        <div className="text-sm text-slate-600">★ {rating.toFixed(2)} · {reviewsCount} avaliações</div>
       </div>
 
       <form className="mt-4 space-y-3" onSubmit={(event) => event.preventDefault()}>
@@ -64,13 +101,22 @@ export const BookingWidget = ({ pricePerNight, rating, reviewsCount }: BookingWi
           </label>
           <input
             id="checkin"
-            name="checkin"
-            value={checkin}
-            onChange={(event) => setCheckin(event.target.value)}
+            inputMode="numeric"
             placeholder="Check-in (dd/mm/aaaa)"
-            className={baseInputClassName}
+            value={checkin}
+            onChange={(event) => setCheckin(maskDate(event.target.value))}
+            aria-invalid={Boolean(errors.checkin)}
+            aria-describedby={errors.checkin ? 'checkin-error' : undefined}
+            className={`${inputBase} ${
+              errors.checkin ? 'border-red-500 focus:ring-red-600 focus:border-red-600' : ''
+            }`}
             autoComplete="off"
           />
+          {errors.checkin ? (
+            <p id="checkin-error" className={`${helpText} text-red-600`}>
+              {errors.checkin}
+            </p>
+          ) : null}
         </div>
         <div>
           <label htmlFor="checkout" className="sr-only">
@@ -78,13 +124,22 @@ export const BookingWidget = ({ pricePerNight, rating, reviewsCount }: BookingWi
           </label>
           <input
             id="checkout"
-            name="checkout"
-            value={checkout}
-            onChange={(event) => setCheckout(event.target.value)}
+            inputMode="numeric"
             placeholder="Check-out (dd/mm/aaaa)"
-            className={baseInputClassName}
+            value={checkout}
+            onChange={(event) => setCheckout(maskDate(event.target.value))}
+            aria-invalid={Boolean(errors.checkout)}
+            aria-describedby={errors.checkout ? 'checkout-error' : undefined}
+            className={`${inputBase} ${
+              errors.checkout ? 'border-red-500 focus:ring-red-600 focus:border-red-600' : ''
+            }`}
             autoComplete="off"
           />
+          {errors.checkout ? (
+            <p id="checkout-error" className={`${helpText} text-red-600`}>
+              {errors.checkout}
+            </p>
+          ) : null}
         </div>
         <div>
           <label htmlFor="guests" className="sr-only">
@@ -92,17 +147,17 @@ export const BookingWidget = ({ pricePerNight, rating, reviewsCount }: BookingWi
           </label>
           <input
             id="guests"
-            name="guests"
             type="number"
             min={1}
             value={guests}
-            onChange={(event) => setGuests(Number(event.target.value))}
-            className={baseInputClassName}
+            onChange={(event) => setGuests(Math.max(1, Number(event.target.value) || 1))}
+            className={inputBase}
           />
         </div>
         <button
           type="submit"
-          className="h-11 w-full rounded-lg bg-teal-600 text-sm font-semibold text-white transition hover:bg-teal-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-600"
+          className={`${btnPrimary} ${!canBook ? 'cursor-not-allowed opacity-60' : ''}`}
+          disabled={!canBook}
         >
           Reservar
         </button>
@@ -111,19 +166,29 @@ export const BookingWidget = ({ pricePerNight, rating, reviewsCount }: BookingWi
       <div className="mt-4 space-y-1 text-sm text-slate-700">
         <div className="flex items-center justify-between">
           <span>
-            R$ {pricePerNight} × {nights} {nights > 1 ? 'noites' : 'noite'}
+            {fmtBRL(pricePerNight)} × {nights || 0} {nights === 1 ? 'noite' : 'noites'}
           </span>
-          <span>R$ {subtotal}</span>
+          <span>{fmtBRL(subtotal)}</span>
         </div>
         <div className="flex items-center justify-between">
-          <span>Taxas</span>
-          <span>R$ {fee}</span>
+          <span>Taxa de serviço ({Math.round(serviceFeeRate * 100)}%)</span>
+          <span>{fmtBRL(serviceFee)}</span>
         </div>
+        {nights > 0 ? (
+          <div className="flex items-center justify-between">
+            <span>Taxa de limpeza</span>
+            <span>{fmtBRL(cleaning)}</span>
+          </div>
+        ) : null}
         <div className="flex items-center justify-between border-t border-slate-200 pt-2 text-base font-medium text-slate-900">
           <span>Total</span>
-          <span>R$ {total}</span>
+          <span>{fmtBRL(total)}</span>
         </div>
       </div>
+
+      {statusMessage ? (
+        <p className="mt-2 text-sm text-amber-700">{statusMessage}</p>
+      ) : null}
     </div>
   );
 };
