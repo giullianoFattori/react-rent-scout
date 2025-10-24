@@ -3,12 +3,12 @@ import Modal from './Modal';
 import type { Review } from './Reviews.types';
 
 interface ReviewFormModalProps {
-  open: boolean;
+  isOpen: boolean;
   onClose: () => void;
   onSubmit: (review: Review) => void;
 }
 
-export default function ReviewFormModal({ open, onClose, onSubmit }: ReviewFormModalProps) {
+export default function ReviewFormModal({ isOpen, onClose, onSubmit }: ReviewFormModalProps) {
   const [name, setName] = useState('');
   const [rating, setRating] = useState(5);
   const [text, setText] = useState('');
@@ -45,7 +45,7 @@ export default function ReviewFormModal({ open, onClose, onSubmit }: ReviewFormM
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Escrever avaliação">
+    <Modal isOpen={isOpen} onClose={onClose} title="Escrever avaliação">
       <form onSubmit={handleSubmit} className="space-y-3">
         <div>
           <label className="mb-1 block text-sm text-slate-700" htmlFor="review-name">

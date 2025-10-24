@@ -136,7 +136,7 @@ export const Reviews = ({ id, rating, count }: ReviewsProps) => {
         ) : null}
       </div>
 
-      <ReviewFormModal open={isModalOpen} onClose={() => setIsModalOpen(false)} onSubmit={handleSubmit} />
+      <ReviewFormModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSubmit={handleSubmit} />
     </section>
   );
 };
